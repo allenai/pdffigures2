@@ -1,10 +1,76 @@
 <html>
     <head>
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans" />
         <link rel="stylesheet" type="text/css" href="style.css">
+        <script>
+          function showBibtext() {
+              var cur = document.getElementById("bibtex").innerHTML;
+              var toggled;
+              if (cur == "") {
+                  toggled = "\
+          @article{pdffigures2,<br>\
+          &nbsp&nbsp&nbsp&nbsp title = {PDFFigures 2.0: Mining Figures from Research Papers},<br>\
+          &nbsp&nbsp&nbsp&nbsp author = {Christopher Clark and Santosh Divvala},<br>\
+          &nbsp&nbsp&nbsp&nbsp booktitle = {JCDL},<br>\
+          &nbsp&nbsp&nbsp&nbsp year = {2016}<br>\
+          }";
+              } else {
+                  toggled = ""
+              }
+              document.getElementById("bibtex").innerHTML = toggled;
+          }
+        </script>
     </head>
 
     <body>
-        <h1><center>PDFFigures 2:<br>Extract Figures from Scholarly Documents</center></h1>
-    (Under Construction)
-  </body>
+        <script>console.log("HERE")</script>
+        <div id="contentBlock">
+        <h1>PDFFigures 2.0:<br>Extract Figures from Scholarly Documents</h1>
+        <div style="display: inline-block; white-space: nowrap;">
+            <center>
+                <img class="page-img" src="paper-figures/page2.jpg">
+                <img class="page-img" src="paper-figures/page3.jpg">
+                <img class="page-img" src="paper-figures/page4.jpg">
+            </Center>
+        </div>
+        <div id="intro-text">
+            Figures and tables are crucial components of scholarly artices, but are often ignored by information extraction technologies due the difficulty of locating and extracting them. PDFFigures 2.0 solves this problem by extracting figures, tables, captions, and section titles from scholarly PDFs. It an expansion of the original <a href="http://pdffigures.allenai.org/">PDFFigures</a> algorithm, with a focus on being able to extract the figures from almost any kind of document in the domain of scholarly computer science papers. PDFFigures 2.0 powers the figure extraction feature in <a href="https://www.semanticscholar.org/">Semantic Scholar</a>.
+        </div>
+        <h2>Abstract</h2>
+        <div class="text">
+            Figures and tables are key sources of information in many scholarly documents. However, current academic search engines do not make use of figures and tables when semantically parsing documents or presenting document summaries to users. To facilitate these applications we develop an algorithm that extracts figures, tables, and captions from documents called "PDFFigures 2.0." Our proposed approach analyzes the structure of individual pages by detecting captions, graphical elements, and chunks of body text, and then lo- cates figures and tables by reasoning about the empty regions within that text. To evaluate our work, we introduce a new dataset of computer science papers, along with ground truth labels for the locations of the figures, tables, and captions within them. Our algorithm achieves impressive results (94% precision at 90% recall) on this dataset surpassing previous state of the art. Further, we show how our framework was used to extract figures from a corpus of over one million papers, and how the resulting extractions were integrated into the user interface of a smart academic search engine, Semantic Scholar (www.semanticscholar.org). Finally, we present results of exploratory data analysis completed on the extracted figures as well as an extension of our method for the task of section title extraction. We release our dataset and code on our project webpage for enabling future research.
+        </div>
+        <h2>Paper and Citation</h2>
+        <div class="col", style="margin-top: 20px">
+            <img src="paper-img.png" style="float: left; width: 170px; border-style: solid; border-width: 1px"></img>
+            <div style="float: left; text-align: left; margin-left: 40px">
+                <div>
+                    <span id="bibtex-title">
+                        "PDFFigures 2.0: Mining Figures from Research Papers"
+                    </span>
+                    <span id="bibtex-rest">
+                        <br>
+                        Christopher Clark and Santosh Divvala. In JCDL 2016.
+                        <br>
+                        [<a href="https://ai2-website.s3.amazonaws.com/publications/pdf2.0.pdf">Paper</a>] [
+                        <a id="bibtexLink" href="#" onclick="showBibtext();return false;">
+                            Show Bibtext
+                        </a>]
+                        <br>
+                    </span>
+                </div>
+                <div id="bibtex"></div>
+            </div>
+        </div>
+        <div style="clear: both"></div>
+        <h2>Code and Dataset</h2>
+        <div class="text">
+            Our implementation and dataset is available on <a href="https://github.com/allenai/pdffigures2">github</a>. PDFFigures 2.0 is written in Scala and uses <a href="pdfbox.apache.org">PDFBox</a> for PDF parsing.
+        </div>
+        <h3>Contact</h3>
+        <div class="text">
+            Christopher Clark, csquared@cs.washington.edu
+        </div>
+        </div>
+    </body>
 </html>

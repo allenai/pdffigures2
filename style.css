@@ -1,0 +1,92 @@
+body {
+    font-family: "Open Sans";
+    font-size: 12px;
+    color: #444;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+    height:100%;
+    text-align: center;
+}
+
+#contentBlock {
+    display: inline-block;
+    background-color: white;
+    height: auto !important;
+    min-height: 100%;
+    padding-left: 60px;
+    padding-right: 60px;
+}
+
+#bibtex-title {
+    font-weight: bold;
+    font-size: large;
+
+}
+
+#bibtex-rest {
+    font-size: large;
+}
+
+#bibtex {
+    margin-top: 20px;
+    color: #000000;
+    font-family: "arial";
+    font-size: medium;
+}
+
+.col {
+    max-width: 830px;
+}
+
+#intro-text {
+    max-width: 830px;
+    text-align: left;
+    font-style: italic;
+    font-size: medium;
+    margin-top: 30px;
+}
+
+.text {
+    max-width: 830px;
+    text-align: left;
+    font-size: medium;
+    line-height: 20px;
+    color: #616161;
+}
+
+h1 {
+    font-family: "Open Sans";
+    font-size: xx-large;
+    font-weight: 600;
+    margin-top: 40px;
+    margin-bottom: 35px;
+}
+
+h2 {
+    color: #000000;
+    font-weight: 900;
+    text-align: left;
+    font-family: "Open Sans";
+    font-size: 22px;
+    margin-bottom:0;
+    padding-bottom:0;
+}
+
+h3 {
+    color: #222;
+    font-weight: 600;
+    text-align: left;
+    font-family: "Open Sans";
+    font-size: large;
+    margin-bottom:0;
+    padding-bottom:0;
+}
+
+.page-img {
+    width: 270px;
+    border-style: solid;
+    border-width: 1px;
+    margin-right: 10px;
+}
