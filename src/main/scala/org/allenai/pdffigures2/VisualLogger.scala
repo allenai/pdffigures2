@@ -93,7 +93,6 @@ class VisualLogger(
               }
             }
           }
-          ImageIO.write(img, "jpg", new File("/tmp/paper/page" + pageNum + ".jpg"));
           (key, img)
         }
 
