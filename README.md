@@ -32,7 +32,9 @@ titles, comments, those elements will be included in the figure.
 ### Command Line Tools
 PDFFigures2 provides two CLI tools. One, 'FigureExtractorBatchCli', can be used to extract figures
 from a large number of PDFs and save the results to disk. The second, 'FigureExtractorVisualizationCli',
-works on a single PDF and provides extensive debug visualizations.
+works on a single PDF and provides extensive debug visualizations. Note that it is recommended to the
+use the `-Dsun.java2d.cmm=sun.java2d.cmm.kcms.KcmsServiceProvider` flag to get the best performance when using
+Java 8, this flag helps [speed up PDFBox](https://pdfbox.apache.org/2.0/getting-started.html). This is especially important for PDFs with many embedded images.
 To run on a PDF and get a preview of the results:
 
 `sbt "run-main org.allenai.pdffigures2.FigureExtractorVisualizationCli /path/to/pdf"`
@@ -63,7 +65,7 @@ titles, along with the PDF's text, can be returned from the BatchCli using the "
 The output will the full text of the PDF, organized into sections. 
 An effort is made to identify the abstract, if there is one, and to exclude 
 text like page headers, authors names, and page numbers.
-Text inside features and captions will also be excluded from the main 
+Text inside figures and captions will also be excluded from the main 
 text and encoded separately.
 Note that while the extracted sections have been found to be reliable, the returned text 
 itself has not been tested and is mostly what is returned by PDFBox's `ExtractText`
