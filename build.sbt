@@ -16,6 +16,8 @@ scmInfo := Some(ScmInfo(
   url("https://github.com/allenai/pdffigures2"),
   "https://github.com/allenai/pdffigures2.git"))
 
+bintrayOrganization := Some(s"allenai")
+
 conflictManager := ConflictManager.default
 
 libraryDependencies ++= Seq(
