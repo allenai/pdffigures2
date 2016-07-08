@@ -6,7 +6,7 @@ object FormattingTextExtractor extends Logging {
 
   // Matches "Abstract. This Paper...", "Abstract", "Abstract-In this paper"
   // The second '-' in the regex is unicode character with a hyphen-like appearance
-  private val AbstractRegex = """^Abstract(((—|-)[a-zA-Z]*)|.)?$""".r
+  private val AbstractRegex = """^(Abstract|ABSTRACT)(((—|-)[a-zA-Z]*)|.)?$""".r
 
   /** @return any Paragraphs that appears to part of an abstract in `page` */
   def selectAbstract(page: Page): Seq[Paragraph] = {
