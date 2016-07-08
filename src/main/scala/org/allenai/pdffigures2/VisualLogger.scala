@@ -259,7 +259,8 @@ class VisualLogger(
   }
 
   /** Show `annotations` for the given page/layer name, allows multiple annotations to be registered
-    * for the same name. */
+    * for the same name.
+    */
   def logGroup(page: Int, groupName: String, annotations: Seq[Annotations]): Unit = {
     require(!ReservedKeys.contains(groupName), s"$groupName is a reserved annotation layer name")
     var i = 0
