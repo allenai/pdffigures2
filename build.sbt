@@ -1,10 +1,20 @@
 import org.allenai.plugins.CoreDependencies.{allenAiCommon, allenAiTestkit}
 
-name := "figure-extractor"
+name := "pdffigures2"
 
-version := "0.0.5"
+organization := "org.allenai"
 
-description := ""
+version := "0.0.6"
+
+description := "Scala library to extract figures, tables, and captions from scholarly documents"
+
+licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
+homepage := Some(url("http://pdffigures2.allenai.org/"))
+
+scmInfo := Some(ScmInfo(
+  url("https://github.com/allenai/pdffigures2"),
+  "https://github.com/allenai/pdffigures2.git"))
 
 conflictManager := ConflictManager.default
 
@@ -18,8 +28,11 @@ libraryDependencies ++= Seq(
   "org.apache.pdfbox" % "pdfbox" % "2.0.1",
   "org.apache.pdfbox" % "fontbox" % "2.0.1",
   "com.typesafe" % "config" % "1.3.0",
-  // In theory not needed, but pdfbox has crashed on PDFs with security features without these
-  // TODO check if this still true for PDFBox 2.0.1
+
+  // So PDFBox can parse more image formats
+  "com.github.jai-imageio" % "jai-imageio-core" % "1.2.1",
+
+  // So PDFBox can parse security enabled but still readable PDFs
   "org.bouncycastle" % "bcprov-jdk15on" % "1.54",
   "org.bouncycastle" % "bcmail-jdk15on" % "1.54",
   "org.bouncycastle" % "bcpkix-jdk15on" % "1.54"
