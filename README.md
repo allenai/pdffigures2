@@ -20,7 +20,7 @@ depending on the PDF parsed.
 
 PDFFigures 2 also supports the ability to save images of the extracted figures as rasterized images,
 currently we support any format that a BufferedImage can be saved to (png, jpeg, ect.). More
-experimentally, If pdftocairo is installed it can be used to save the figures to 
+experimentally, If pdftocairo is installed it can be used to save the figures to
 a selection of vector graphics formats (svg, ps, eps ect.).
 
 PDFFigures 2 only seeks to extract figures or tables that have been captioned, in which case
@@ -28,14 +28,24 @@ we define a figure to be all elements on the page that the caption refers to. If
 subfigures the returned figure will include all the subfigures. If a table or figure includes text
 titles, comments, those elements will be included in the figure.
 
+### Installation
+PDFFigures2 is published to bintray at https://bintray.com/allenai/maven. 
+To install it you will need an appropriate resolver like:
+
+`resolvers += Resolver.bintrayRepo("allenai", "maven")`
+
+Then include
+
+`libraryDependencies += "org.allenai" %%  "pdffigures2" % "0.0.6"`
+
+Including this package in [jcenter](https://bintray.com/bintray/jcenter) is in progress.
 
 ### Command Line Tools
-PDFFigures2 provides two CLI tools. One, 'FigureExtractorBatchCli', can be used to extract figures
+PDFFigures 2 provides two CLI tools. One, 'FigureExtractorBatchCli', can be used to extract figures
 from a large number of PDFs and save the results to disk. The second, 'FigureExtractorVisualizationCli',
-works on a single PDF and provides extensive debug visualizations. Note that it is recommended to the
-use the `-Dsun.java2d.cmm=sun.java2d.cmm.kcms.KcmsServiceProvider` flag to get the best performance when using
-Java 8, this flag helps [speed up PDFBox](https://pdfbox.apache.org/2.0/getting-started.html). This is especially important for PDFs with many embedded images.
-To run on a PDF and get a preview of the results:
+works on a single PDF and provides extensive debug visualizations. Note it is recommended to use the "-Dsun.java2d.cmm=sun.java2d.cmm.kcms.KcmsServiceProvider" to get the best performance out of the PDF parser, see here[https://pdfbox.apache.org/2.0/getting-started.html]
+
+To run on a PDF and get a preview of the results use:
 
 `sbt "run-main org.allenai.pdffigures2.FigureExtractorVisualizationCli /path/to/pdf"`
 
@@ -62,12 +72,13 @@ To compile a stand alone JAR with these tools:
 ### Section Titles
 FigureExtractor has experimental support for additionally identifying section titles. Section
 titles, along with the PDF's text, can be returned from the BatchCli using the "-g" flag.
-The output will the full text of the PDF, organized into sections. 
-An effort is made to identify the abstract, if there is one, and to exclude 
+The output will the full text of the PDF, organized into sections.
+An effort is made to identify the abstract, if there is one, and to exclude
 text like page headers, authors names, and page numbers.
-Text inside figures and captions will also be excluded from the main 
+Text inside figures and captions will also be excluded from the main
 text and encoded separately.
-Note that while the extracted sections have been found to be reliable, the returned text 
+Note that while the extracted section titles have been found to be reliable, the 
+quality of the returned text
 itself has not been tested and is mostly what is returned by PDFBox's `ExtractText`
 
 ### Interface
@@ -76,7 +87,7 @@ FigureExtractor exports its high level programmatic interfaces in FigureExtracto
 ### Multithreading
 FigureExtractor rigorously checks Thread.interrupted and so can be timed out easily.
 FigureExtractorBatchCli supports multi-threading.
- 
+
 ## Implementation Overview
 See the paper for more details. In brief, the input PDF is pushed through the following steps:
 
@@ -139,7 +150,7 @@ cases we do not handle at the moment:
 1. "L" shaped figures. For example
 evaluation/datasets/s2/pdfs/202042e6f88abe690a55e136475053a3eac68d40.pdf, page 7. To handle these
 one would need to adjust the API to allow figure regions to be described by multiple bounding
-boxes and then adjust "FigureDetector.scala" to return them. 
+boxes and then adjust "FigureDetector.scala" to return them.
 2. Three adjacent figures, where the figures share borders each other. For example
 evaluation/datasets/conference/pdfs/icml10_4.pdf. I think this would not be too difficult to
 handle as a special case, it would require heuristically guessing how to split up
@@ -156,6 +167,11 @@ captions always start lines (this assumption is almost never wrong outside
 of these cases), which causes us to miss the second caption. This might be relatively
 easy to address by checking each line we find to have a caption for large gap between the words
 in the line, followed by a second caption.
+5. Figures above the abstract, currently it is assumed all text above the abstract 
+is not part of a figure. This helps avoid false positives induced by including emails/names/title 
+from the header in figures on the first page, but there is probably a way to
+relax this assumption to resolve this issue.
+
 
 
 ## Contact
