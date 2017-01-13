@@ -188,7 +188,10 @@ object FigureExtractor {
     private val figureExtractor = new FigureExtractor(true, true, true, true, true)
 
     def fromInputStream(is: InputStream): Document =
-      figureExtractor.getFiguresWithText(PDDocument.load(is))
+      fromPDDocument(PDDocument.load(is))
+
+    def fromPDDocument(pdDocument: PDDocument) =
+      figureExtractor.getFiguresWithText(pdDocument)
   }
 
   /** Document with figures rasterized */
