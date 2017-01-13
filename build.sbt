@@ -7,6 +7,8 @@ organization := "org.allenai"
 
 description := "Scala library to extract figures, tables, and captions from scholarly documents"
 
+enablePlugins(LibraryPlugin)
+
 //
 // Release settings
 //
