@@ -501,7 +501,10 @@ object FigureDetector {
 
     val captionsWithNoProposals = proposalsWithCaptions.filter(_._2.isEmpty).map(_._1)
     val validProposals = proposalsWithCaptions.map(_._2).filter(_.nonEmpty)
-    if (validProposals.isEmpty) {
+    val configurationCount = validProposals.map(_.size.toLong).product
+    // For some papers, we end up with billions of configurations. We don't have time to evaluate
+    // them, so we give up when there are more than 500k.
+    if (validProposals.isEmpty || configurationCount > 500000) {
       PageWithFigures(
         page.pageNumber,
         (page.otherText ++ page.bodyText ++ captionsWithNoProposals.map(_.paragraph)).sorted.toList,
