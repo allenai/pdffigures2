@@ -1,12 +1,33 @@
 import org.allenai.plugins.CoreDependencies.{allenAiCommon, allenAiTestkit}
+import sbtrelease.ReleaseStateTransformations._
 
 name := "pdffigures2"
 
 organization := "org.allenai"
 
-version := "0.0.6"
-
 description := "Scala library to extract figures, tables, and captions from scholarly documents"
+
+enablePlugins(LibraryPlugin)
+
+//
+// Release settings
+//
+
+releaseProcess := Seq(
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)
+
+bintrayPackage := s"${organization.value}:${name.value}_${scalaBinaryVersion.value}"
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html"))
 
@@ -16,7 +37,34 @@ scmInfo := Some(ScmInfo(
   url("https://github.com/allenai/pdffigures2"),
   "https://github.com/allenai/pdffigures2.git"))
 
-bintrayOrganization := Some(s"allenai")
+bintrayRepository := "private"
+
+publishMavenStyle := true
+
+publishArtifact in Test := false
+
+pomIncludeRepository := { _ => false }
+
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+pomExtra :=
+  <developers>
+    <developer>
+      <id>allenai-dev-role</id>
+      <name>Allen Institute for Artificial Intelligence</name>
+      <email>dev-role@allenai.org</email>
+    </developer>
+  </developers>
+
+resolvers ++= Seq(
+  "AllenAI Bintray" at "http://dl.bintray.com/allenai/maven",
+  "AllenAI Bintray Private" at "http://dl.bintray.com/allenai/private",
+  Resolver.jcenterRepo
+)
+
+//
+// Other settings
+//
 
 conflictManager := ConflictManager.default
 
