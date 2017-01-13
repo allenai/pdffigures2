@@ -417,7 +417,7 @@ object FigureDetector {
           nonFigureContent, bounds
         ).copy(x2 = captBox.x1)
         if (twoColumn) {
-          val containsCenterElement = !crossesCenter.exists(prop.contains(_, 2))
+          val containsCenterElement = crossesCenter.exists(prop.contains(_, 2))
           if (containsCenterElement ||
             !(prop.x1 < pageCenter.get && prop.x2 > pageCenter.get)) {
             proposals = Proposal(prop, caption, ProposalDirection.Left) :: proposals
@@ -432,7 +432,7 @@ object FigureDetector {
           nonFigureContent, bounds
         ).copy(x1 = captBox.x2)
         if (twoColumn) {
-          val containsCenterElement = !crossesCenter.exists(prop.contains(_, 2))
+          val containsCenterElement = crossesCenter.exists(prop.contains(_, 2))
           if (containsCenterElement ||
             !(prop.x1 < pageCenter.get && prop.x2 > pageCenter.get)) {
             proposals = Proposal(prop, caption, ProposalDirection.Right) :: proposals
