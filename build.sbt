@@ -35,6 +35,8 @@ scmInfo := Some(ScmInfo(
   url("https://github.com/allenai/pdffigures2"),
   "https://github.com/allenai/pdffigures2.git"))
 
+bintrayRepository := "private"
+
 publishMavenStyle := true
 
 publishArtifact in Test := false
