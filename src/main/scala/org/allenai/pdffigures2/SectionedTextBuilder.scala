@@ -35,7 +35,11 @@ object SectionedTextBuilder {
     *              title was found
     * @param paragraphs section text broken up into paragraphs
     */
-  case class DocumentSection(title: Option[PdfText], paragraphs: Seq[PdfText])
+  case class DocumentSection(title: Option[PdfText], paragraphs: Seq[PdfText]) {
+    def titleText = title.map(_.text)
+    def paragraphsText = paragraphs.map(_.text)
+    def bodyText = paragraphsText.mkString("\n")
+  }
 
   @tailrec
   private def mergeInSections(
@@ -94,7 +98,7 @@ object SectionedTextBuilder {
     require(sortedPages.head.pageNumber == 0, "Must have a first page")
     val mergedPerPage = sortedPages.map(page =>
       mergeInSections(
-        page.classifiedText.sectionTitles.toList,
+        page.classifiedText.sectionTitles.toList.sorted,
         page.paragraphs.toList, page.pageNumber, List()
       ).reverse)
     // For sections that cross multiple pages, merge them into one section

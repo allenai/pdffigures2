@@ -3,6 +3,7 @@ package org.allenai.pdffigures2
 import org.apache.pdfbox.text.TextPosition
 
 import java.text.Normalizer
+import org.allenai.common.StringUtils._
 
 /** Span of text denoted by the starting and ending line number, inclusive */
 case class TextSpan(start: Int, end: Int) extends Ordered[TextSpan] {
@@ -38,7 +39,7 @@ object Paragraph {
       q += 1; q - 1
     }
     if (builder == null) {
-      word
+      word.removeUnprintable
     } else {
       builder.append(word.substring(p, q))
       builder.toString()
