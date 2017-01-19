@@ -5,6 +5,8 @@ import org.apache.pdfbox.rendering.{ ImageType, PDFRenderer }
 
 import java.awt.image.BufferedImage
 
+import scala.collection.mutable
+
 /** Finds the bounding boxes of graphical elements in a PDF by rasterizing the PDF and
   * finding the the bounding boxes of the connected components in the image.
   * Currently only used for OCRed PDFs.
@@ -57,7 +59,8 @@ object FindGraphicsRaster {
     pixThreshold: Int,
     rescale: Int
   ): List[Box] = {
-    val pixelsToExplore = scala.collection.mutable.Stack[Int]()
+    val pixelsToExplore = mutable.Set[Int]()
+
     var boundingBoxes = List[Box]()
     for (y <- 0 until h) {
       for (x <- 0 until w) {
@@ -67,34 +70,35 @@ object FindGraphicsRaster {
           var maxX = x
           var minY = y
           var maxY = y
-          pixelsToExplore.push(pixelIndex)
+          pixelsToExplore.add(pixelIndex)
           while (pixelsToExplore.nonEmpty) {
-            val currentPixel = pixelsToExplore.pop()
+            val currentPixel = pixelsToExplore.head
+            pixelsToExplore.remove(currentPixel)
             if (currentPixel > w) {
               val lowerPixel = currentPixel - w
               if (pixels(lowerPixel) < pixThreshold) {
-                pixelsToExplore.push(currentPixel - w)
+                pixelsToExplore.add(currentPixel - w)
                 minY = Math.min(minY, lowerPixel / w)
               }
             }
             if (currentPixel < pixels.length - w) {
               val upperPixel = currentPixel + w
               if (pixels(upperPixel) < pixThreshold) {
-                pixelsToExplore.push(upperPixel)
+                pixelsToExplore.add(upperPixel)
                 maxY = Math.max(maxY, upperPixel / w)
               }
             }
             if (currentPixel % w != 0) {
               val leftPixel = currentPixel - 1
               if (pixels(leftPixel) < pixThreshold) {
-                pixelsToExplore.push(leftPixel)
+                pixelsToExplore.add(leftPixel)
                 minX = Math.min(minX, leftPixel % w)
               }
             }
             if ((currentPixel + 1) % w != 0) {
               val rightPixel = currentPixel + 1
               if (pixels(rightPixel) < pixThreshold) {
-                pixelsToExplore.push(rightPixel + 1)
+                pixelsToExplore.add(rightPixel + 1)
                 maxX = Math.max(maxX, rightPixel % w)
               }
             }
