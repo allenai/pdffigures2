@@ -138,7 +138,7 @@ object FigureExtractorBatchCli extends Logging {
   ): Either[ProcessingError, ProcessingStatistics] = {
     val fileStartTime = System.nanoTime()
     var doc: PDDocument = null
-    val figureExtractor = FigureExtractor(true, true, true, true, true)
+    val figureExtractor = FigureExtractor()
     try {
       doc = PDDocument.load(inputFile)
       val useCairo = FigureRenderer.CairoFormat.contains(config.figureFormat)
