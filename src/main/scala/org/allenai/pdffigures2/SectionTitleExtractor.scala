@@ -25,10 +25,11 @@ object SectionTitleExtractor extends Logging {
       false
     } else {
       val firstWordText = line.words.head.text
-      NumberRegex.pattern.matcher(firstWordText).matches() ||
-        RomanNumeralsRegex.pattern.matcher(firstWordText).matches() ||
-        LetterNumberRegex.pattern.matcher(firstWordText).matches() ||
-        AppendixRegex.pattern.matcher(firstWordText).matches()
+
+      RegexWithTimeout.matcher(NumberRegex.pattern, firstWordText).matches() ||
+      RegexWithTimeout.matcher(RomanNumeralsRegex.pattern, firstWordText).matches() ||
+      RegexWithTimeout.matcher(LetterNumberRegex.pattern, firstWordText).matches() ||
+      RegexWithTimeout.matcher(AppendixRegex.pattern, firstWordText).matches()
     }
   }
 
