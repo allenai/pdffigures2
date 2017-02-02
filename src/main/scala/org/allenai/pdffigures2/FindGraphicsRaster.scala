@@ -98,6 +98,7 @@ object FindGraphicsRaster {
                 maxX = Math.max(maxX, rightPixel % w)
               }
             }
+            // Set the current pixel to white so we don't visit it again.
             pixels(currentPixel) = pixThreshold
           }
           boundingBoxes = new Box(minX * rescale, minY * rescale,
