@@ -24,6 +24,12 @@ object FigureDetector {
 
   private val SplitVerticalRegionMinHeightFraction = 4
 
+  // Used for filtering out proposals that are likely to be wrong because they cut across figure
+  // elements or because they are too close to the page boundary
+  val cutFilterIntervalMin = 0.1
+  val cutFilterIntervalMax = 0.9
+  val boundaryFilterMinDistance = 30
+
   private sealed trait ProposalDirection
   private object ProposalDirection {
     case object Up extends ProposalDirection
@@ -483,8 +489,24 @@ object FigureDetector {
         }
       }
       proposals
+        .filter((proposal: Proposal) => !boxCutsFigure(proposal.region, possibleFigureContent))
+        .filter((proposal: Proposal) => !boxOnBoundary(proposal.region))
     }
     proposalsPerCaption
+  }
+
+  /** Detects figure proposals that are too close to the top and left page boundaries */
+  // TODO noahs: We should find a way to get page width and height from PDFBox so that we can check
+  // the bottom and right boundaries as well
+  private def boxOnBoundary(box: Box): Boolean = {
+    box.x1 <= boundaryFilterMinDistance || box.y1 <= boundaryFilterMinDistance
+  }
+
+  private def inCutInterval(d: Double) = { d >= cutFilterIntervalMin && d <= cutFilterIntervalMax }
+
+  /** Detects figure proposals whose boundary cuts accross figure elements */
+  private def boxCutsFigure(box: Box, possibleFigureContent: Seq[Box]): Boolean = {
+    possibleFigureContent.map((fig: Box) => fig.intersectArea(box) / fig.area).exists(inCutInterval)
   }
 
   /** Attempts to build a Figure for each caption in 'PageWithRegions' */
