@@ -3,7 +3,7 @@ package org.allenai.pdffigures2
 import java.awt.image.BufferedImage
 import org.allenai.common.{ EnumCompanion, Enum }
 
-sealed abstract class FigureType(id: String) extends Enum[FigureType](id)
+sealed abstract class FigureType(id: String) extends Enum[FigureType]
 object FigureType extends EnumCompanion[FigureType] {
   case object Table extends FigureType("Table")
   case object Figure extends FigureType("Figure")

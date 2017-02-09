@@ -69,8 +69,8 @@ resolvers ++= Seq(
 conflictManager := ConflictManager.default
 
 libraryDependencies ++= Seq(
-  allenAiCommon,
-  allenAiTestkit,
+  "org.allenai.common" %% "common-core" % "1.4.9",
+  "org.allenai.common" %% "common-testkit" % "1.4.9",
   "io.spray" %% "spray-json" % "1.3.2",
   "com.github.scopt" %% "scopt" % "3.4.0",
   "ch.qos.logback" % "logback-classic" % "1.1.7",
