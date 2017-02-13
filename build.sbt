@@ -81,6 +81,7 @@ libraryDependencies ++= Seq(
 
   // So PDFBox can parse more image formats
   "com.github.jai-imageio" % "jai-imageio-core" % "1.2.1",
+  "com.github.jai-imageio" % "jai-imageio-jpeg2000" % "1.3.0", // For handling jpeg2000 images
 
   // So PDFBox can parse security enabled but still readable PDFs
   "org.bouncycastle" % "bcprov-jdk15on" % "1.54",
