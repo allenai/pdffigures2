@@ -38,7 +38,8 @@ Then include
 
 `libraryDependencies += "org.allenai" %%  "pdffigures2" % "0.0.10"`
 
-For licensing reasons, PDFFigures2 does not include libraries for some image formats. If you have no
+For licensing reasons, PDFFigures2 does not include libraries for some image formats. Without these
+libraries, PDFFigures2 cannot process PDFs that contain images in these formats. If you have no
 licensing restrictions in your project, we recommend you add these additional dependencies to your
 project as well:
 ```
