@@ -36,9 +36,17 @@ To install it you will need an appropriate resolver like:
 
 Then include
 
-`libraryDependencies += "org.allenai" %%  "pdffigures2" % "0.0.6"`
+`libraryDependencies += "org.allenai" %%  "pdffigures2" % "0.0.10"`
 
-Including this package in [jcenter](https://bintray.com/bintray/jcenter) is in progress.
+For licensing reasons, PDFFigures2 does not include libraries for some image formats. Without these
+libraries, PDFFigures2 cannot process PDFs that contain images in these formats. If you have no
+licensing restrictions in your project, we recommend you add these additional dependencies to your
+project as well:
+```
+  "com.github.jai-imageio" % "jai-imageio-core" % "1.2.1",
+  "com.github.jai-imageio" % "jai-imageio-jpeg2000" % "1.3.0", // For handling jpeg2000 images
+  "com.levigo.jbig2" % "levigo-jbig2-imageio" % "1.6.5", // For handling jbig2 images
+```
 
 ### Command Line Tools
 PDFFigures 2 provides two CLI tools. One, 'FigureExtractorBatchCli', can be used to extract figures
