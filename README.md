@@ -36,7 +36,7 @@ To install it you will need an appropriate resolver like:
 
 Then include
 
-`libraryDependencies += "org.allenai" %%  "pdffigures2" % "0.0.10"`
+`libraryDependencies += "org.allenai" %%  "pdffigures2" % "0.0.11"`
 
 For licensing reasons, PDFFigures2 does not include libraries for some image formats. Without these
 libraries, PDFFigures2 cannot process PDFs that contain images in these formats. If you have no
