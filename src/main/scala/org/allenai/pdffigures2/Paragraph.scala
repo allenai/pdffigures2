@@ -29,7 +29,7 @@ object Paragraph {
         }
         builder.append(word.substring(p, q))
         if (c == 0xFDF2 && q > 0 && (word.charAt(q - 1) == 0x0627 ||
-          word.charAt(q - 1) == 0xFE8D)) {
+            word.charAt(q - 1) == 0xFE8D)) {
           builder.append("\u0644\u0644\u0647")
         } else {
           builder.append(Normalizer.normalize(word.substring(q, q + 1), Normalizer.Form.NFKC).trim)
@@ -52,7 +52,7 @@ object Paragraph {
     val linesWithoutHyphens = normalizedLines.dropRight(1).map { line =>
       val lastWord = line.last
       if (lastWord.nonEmpty && lastWord.last == '-' &&
-        lastWord.length > 1 && lastWord.exists(Character.isLetter)) {
+          lastWord.length > 1 && lastWord.exists(Character.isLetter)) {
         line.mkString(" ").dropRight(1) // Don't add following space and drop the hyphen
       } else {
         line.mkString(" ") + " "
@@ -94,7 +94,6 @@ object Paragraph {
 
     segments.sorted.foreach {
       case TextSpan(start, end) =>
-
         // Advance to the starting paragraph
         while (curLines.isEmpty || curParagraph.lines.last.lineNumber < start) {
           if (curLines.nonEmpty) {

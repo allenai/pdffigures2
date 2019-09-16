@@ -29,10 +29,16 @@ object FigureExtractorBatchCli extends Logging {
 
   case class CliConfigBatch(
     inputFiles: Seq[File] = Seq(),
-    figureDataPrefix: Option[String] = None, dpi: Int = 150, ignoreErrors: Boolean = false,
-    saveStats: Option[String] = None, saveRegionlessCaptions: Boolean = false,
-    threads: Int = 1, debugLogging: Boolean = true, fullTextPrefix: Option[String] = None,
-    figureImagePrefix: Option[String] = None, figureFormat: String = "png"
+    figureDataPrefix: Option[String] = None,
+    dpi: Int = 150,
+    ignoreErrors: Boolean = false,
+    saveStats: Option[String] = None,
+    saveRegionlessCaptions: Boolean = false,
+    threads: Int = 1,
+    debugLogging: Boolean = true,
+    fullTextPrefix: Option[String] = None,
+    figureImagePrefix: Option[String] = None,
+    figureFormat: String = "png"
   )
 
   val Parser = new scopt.OptionParser[CliConfigBatch]("figure-extractor-batch") {
@@ -51,10 +57,12 @@ object FigureExtractorBatchCli extends Logging {
         }
       c.copy(inputFiles = inputFiles)
     } text "input PDF(s) or directory containing PDFs"
-    opt[Int]('i', "dpi") action { (dpi, c) => c.copy(dpi = dpi) } text
+    opt[Int]('i', "dpi") action { (dpi, c) =>
+      c.copy(dpi = dpi)
+    } text
       "DPI to save the figures in (default 150)" validate { dpi =>
-        if (dpi > 0) success else failure("DPI must > 0")
-      }
+      if (dpi > 0) success else failure("DPI must > 0")
+    }
     opt[String]('s', "save-stats") action { (s, c) =>
       c.copy(saveStats = Some(s))
     } validate { s =>
@@ -95,13 +103,15 @@ object FigureExtractorBatchCli extends Logging {
       if (FigureRenderer.AllowedFormats.contains(x)) {
         success
       } else {
-        failure(s"$x not supported (allowed " +
-          s"formats: ${FigureRenderer.AllowedFormats.mkString(",")}")
+        failure(
+          s"$x not supported (allowed " +
+            s"formats: ${FigureRenderer.AllowedFormats.mkString(",")}"
+        )
       }
     }
     checkConfig { c =>
-      val badFiles = c.inputFiles.find(f =>
-        !f.exists() || f.isDirectory || !f.getName.endsWith(".pdf"))
+      val badFiles =
+        c.inputFiles.find(f => !f.exists() || f.isDirectory || !f.getName.endsWith(".pdf"))
       if (badFiles.isDefined) {
         failure(s"Input file ${badFiles.get.getName} is not a PDF file")
       } else if (c.saveRegionlessCaptions && c.fullTextPrefix.isDefined) {
@@ -114,8 +124,12 @@ object FigureExtractorBatchCli extends Logging {
     }
   }
 
-  def getFilenames(prefix: String, docName: String, format: String,
-    figures: Seq[Figure]): Seq[String] = {
+  def getFilenames(
+    prefix: String,
+    docName: String,
+    format: String,
+    figures: Seq[Figure]
+  ): Seq[String] = {
     val namesUsed = scala.collection.mutable.Map[String, Int]()
     figures.map { fig =>
       val figureName = s"${fig.figType}${fig.name}"
@@ -126,8 +140,14 @@ object FigureExtractorBatchCli extends Logging {
     }
   }
 
-  def saveRasterizedFigures(prefix: String, docName: String, format: String, dpi: Int,
-    figures: Seq[RasterizedFigure], doc: PDDocument): Seq[SavedFigure] = {
+  def saveRasterizedFigures(
+    prefix: String,
+    docName: String,
+    format: String,
+    dpi: Int,
+    figures: Seq[RasterizedFigure],
+    doc: PDDocument
+  ): Seq[SavedFigure] = {
     val filenames = getFilenames(prefix, docName, format, figures.map(_.figure))
     FigureRenderer.saveRasterizedFigures(filenames.zip(figures), format, dpi)
   }
@@ -148,23 +168,37 @@ object FigureExtractorBatchCli extends Logging {
         val outputFilename = s"${config.fullTextPrefix.get}$truncatedName.json"
         val numFigures = if (config.figureImagePrefix.isDefined && !useCairo) {
           val document = figureExtractor.getRasterizedFiguresWithText(doc, config.dpi)
-          val savedFigures = saveRasterizedFigures(config.figureImagePrefix.get, truncatedName,
-            config.figureFormat, config.dpi, document.figures, doc)
-          val documentWithFigures = DocumentWithSavedFigures(savedFigures, document.abstractText,
-            document.sections)
+          val savedFigures = saveRasterizedFigures(
+            config.figureImagePrefix.get,
+            truncatedName,
+            config.figureFormat,
+            config.dpi,
+            document.figures,
+            doc
+          )
+          val documentWithFigures =
+            DocumentWithSavedFigures(savedFigures, document.abstractText, document.sections)
           FigureRenderer.saveAsJSON(outputFilename, documentWithFigures)
           document.figures.size
         } else {
           val document = figureExtractor.getFiguresWithText(doc)
           if (useCairo) {
-            val filenames = getFilenames(config.figureImagePrefix.get, truncatedName,
-              config.figureFormat, document.figures)
-            val savedFigures = FigureRenderer.saveFiguresAsImagesCairo(
-              doc,
-              filenames.zip(document.figures), config.figureFormat, config.dpi
-            ).toSeq
-            val savedDocument = DocumentWithSavedFigures(savedFigures, document.abstractText,
-              document.sections)
+            val filenames = getFilenames(
+              config.figureImagePrefix.get,
+              truncatedName,
+              config.figureFormat,
+              document.figures
+            )
+            val savedFigures = FigureRenderer
+              .saveFiguresAsImagesCairo(
+                doc,
+                filenames.zip(document.figures),
+                config.figureFormat,
+                config.dpi
+              )
+              .toSeq
+            val savedDocument =
+              DocumentWithSavedFigures(savedFigures, document.abstractText, document.sections)
             FigureRenderer.saveAsJSON(outputFilename, savedDocument)
           } else {
             FigureRenderer.saveAsJSON(outputFilename, document)
@@ -175,18 +209,32 @@ object FigureExtractorBatchCli extends Logging {
       } else {
         val (figures, failedCaptions) = if (config.figureImagePrefix.isDefined && !useCairo) {
           val figuresWithErrors = figureExtractor.getRasterizedFiguresWithErrors(doc, config.dpi)
-          val savedFigures = saveRasterizedFigures(config.figureImagePrefix.get, truncatedName,
-            config.figureFormat, config.dpi, figuresWithErrors.figures, doc)
+          val savedFigures = saveRasterizedFigures(
+            config.figureImagePrefix.get,
+            truncatedName,
+            config.figureFormat,
+            config.dpi,
+            figuresWithErrors.figures,
+            doc
+          )
           (Left(savedFigures), figuresWithErrors.failedCaptions)
         } else {
           val figuresWithErrors = figureExtractor.getFiguresWithErrors(doc)
           if (useCairo) {
-            val filenames = getFilenames(config.figureImagePrefix.get, truncatedName,
-              config.figureFormat, figuresWithErrors.figures)
-            val savedFigures = FigureRenderer.saveFiguresAsImagesCairo(
-              doc,
-              filenames.zip(figuresWithErrors.figures), config.figureFormat, config.dpi
-            ).toSeq
+            val filenames = getFilenames(
+              config.figureImagePrefix.get,
+              truncatedName,
+              config.figureFormat,
+              figuresWithErrors.figures
+            )
+            val savedFigures = FigureRenderer
+              .saveFiguresAsImagesCairo(
+                doc,
+                filenames.zip(figuresWithErrors.figures),
+                config.figureFormat,
+                config.dpi
+              )
+              .toSeq
             (Left(savedFigures), figuresWithErrors.failedCaptions)
           } else {
             (Right(figuresWithErrors.figures), figuresWithErrors.failedCaptions)
@@ -213,16 +261,25 @@ object FigureExtractorBatchCli extends Logging {
       }
       val timeTaken = System.nanoTime() - fileStartTime
       logger.info(s"Finished ${inputFile.getName} in ${(timeTaken / 1000000) / 1000.0} seconds")
-      Right(ProcessingStatistics(inputFile.getAbsolutePath, doc.getNumberOfPages,
-        numFigures, timeTaken / 1000000))
+      Right(
+        ProcessingStatistics(
+          inputFile.getAbsolutePath,
+          doc.getNumberOfPages,
+          numFigures,
+          timeTaken / 1000000
+        )
+      )
     } catch {
       case e: Exception =>
         if (config.ignoreErrors) {
           logger.info(s"Error: $e on document ${inputFile.getName}")
-          Left(ProcessingError(
-            inputFile.getAbsolutePath,
-            Option(e.getMessage), e.getClass.getName
-          ))
+          Left(
+            ProcessingError(
+              inputFile.getAbsolutePath,
+              Option(e.getMessage),
+              e.getClass.getName
+            )
+          )
         } else {
           throw e
         }
@@ -240,8 +297,10 @@ object FigureExtractorBatchCli extends Logging {
     val results = if (config.threads == 1) {
       config.inputFiles.zipWithIndex.map {
         case (inputFile, fileNum) =>
-          logger.info(s"Processing file ${inputFile.getName} " +
-            s"(${fileNum + 1} of ${config.inputFiles.size})")
+          logger.info(
+            s"Processing file ${inputFile.getName} " +
+              s"(${fileNum + 1} of ${config.inputFiles.size})"
+          )
           processFile(inputFile, config)
       }
     } else {
@@ -254,8 +313,10 @@ object FigureExtractorBatchCli extends Logging {
       val onPdf = new AtomicInteger(0)
       parFiles.map { inputFile =>
         val curPdf = onPdf.incrementAndGet();
-        logger.info(s"Processing file ${inputFile.getName} " +
-          s"($curPdf of ${config.inputFiles.size})")
+        logger.info(
+          s"Processing file ${inputFile.getName} " +
+            s"($curPdf of ${config.inputFiles.size})"
+        )
         processFile(inputFile, config)
       }.toList
     }
@@ -274,9 +335,11 @@ object FigureExtractorBatchCli extends Logging {
     if (errors.isEmpty) {
       logger.info(s"No errors")
     } else {
-      val errorString = errors.map {
-        case ProcessingError(name, msg, errorName) => s"$name: $errorName: $msg"
-      }.mkString("\n")
+      val errorString = errors
+        .map {
+          case ProcessingError(name, msg, errorName) => s"$name: $errorName: $msg"
+        }
+        .mkString("\n")
       if (config.saveStats.isDefined) {
         logger.info(s"Errors ${errors.size} files")
       } else {

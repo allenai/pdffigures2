@@ -5,15 +5,15 @@ import org.allenai.common.Logging
 import org.apache.pdfbox.pdmodel.font.PDFont
 
 case class CaptionStart(
-    header: String,
-    name: String,
-    figType: FigureType,
-    numberSyntax: String,
-    line: Line,
-    nextLine: Option[Line],
-    page: Int,
-    paragraphStart: Boolean,
-    lineEnd: Boolean
+  header: String,
+  name: String,
+  figType: FigureType,
+  numberSyntax: String,
+  line: Line,
+  nextLine: Option[Line],
+  page: Int,
+  paragraphStart: Boolean,
+  lineEnd: Boolean
 ) {
   val figId = (figType, name)
   val colonMatch = numberSyntax == ":"
@@ -52,8 +52,8 @@ object CaptionDetector extends Logging {
   }
 
   private case class NonStandardFont(
-      standardFont: PDFont,
-      types: Set[FigureType]
+    standardFont: PDFont,
+    types: Set[FigureType]
   ) extends CandidateFilter {
     val name = s"Non Standard Font: ${types.toList}"
     def accept(cc: CaptionStart): Boolean =
@@ -95,10 +95,12 @@ object CaptionDetector extends Logging {
     val name = "Left Aligned" + (if (figureOnly) " Figures" else "")
     def accept(cc: CaptionStart): Boolean = {
       figureOnly && cc.figType == FigureType.Table || (if (cc.nextLine.isDefined) {
-        Math.abs(cc.line.boundary.x1 - cc.nextLine.get.boundary.x1) < 1
-      } else {
-        true
-      })
+                                                         Math.abs(
+                                                           cc.line.boundary.x1 - cc.nextLine.get.boundary.x1
+                                                         ) < 1
+                                                       } else {
+                                                         true
+                                                       })
     }
   }
 
@@ -135,8 +137,14 @@ object CaptionDetector extends Logging {
       Seq()
     }
     val filters = Seq(ColonOnly(), AllCapsFigOnly(), AllCapsTableOnly()) ++
-      fontFilters ++ Seq(AbbreviatedFigOnly(), FigureHasFollowingTextOnly(), PeriodOnly(),
-        LeftAlignedOnly(false), LeftAlignedOnly(true), LineEndOnly())
+      fontFilters ++ Seq(
+      AbbreviatedFigOnly(),
+      FigureHasFollowingTextOnly(),
+      PeriodOnly(),
+      LeftAlignedOnly(false),
+      LeftAlignedOnly(true),
+      LineEndOnly()
+    )
     selectCaptionCandidates(candidates, filters)
   }
 
@@ -149,12 +157,13 @@ object CaptionDetector extends Logging {
             val firstWord = line.words.head.text
             // PDFBox might add a space between the 'Fig' and '.', due to imperfect spacing
             // deductions in rare cases, we handle this by grouping the two together
-            val (headerStr, wordNumber) = if (line.words.size > 2 &&
-              line.words(1).text == ".") {
-              (firstWord + ".", 2)
-            } else {
-              (firstWord, 1)
-            }
+            val (headerStr, wordNumber) =
+              if (line.words.size > 2 &&
+                  line.words(1).text == ".") {
+                (firstWord + ".", 2)
+              } else {
+                (firstWord, 1)
+              }
             val captionStartMatchOpt = captionStartRegex.findFirstMatchIn(firstWord)
             val candidates = if (captionStartMatchOpt.nonEmpty && line.words.size > 1) {
               val captionStartMatch = captionStartMatchOpt.get
@@ -226,8 +235,10 @@ object CaptionDetector extends Logging {
         groupedById = groupedById.map {
           case (figId, candidatesForId) => (figId, candidatesForId.filter(filterToUse.get.accept))
         }
-        logger.debug(s"Applied filter ${filterToUse.get.name}, " +
-          s"${groupedById.values.map(_.size).sum} remaining")
+        logger.debug(
+          s"Applied filter ${filterToUse.get.name}, " +
+            s"${groupedById.values.map(_.size).sum} remaining"
+        )
       } else {
         // No filters applied, as a last resort try use PDFBox's paragraph deliminations to
         // disambiguate. This is slightly error-prone due to paragraph chunking errors but better
@@ -244,8 +255,10 @@ object CaptionDetector extends Logging {
             }
         }
         if (!removedAny) {
-          logger.debug(s"Filtered for paragraph starts, " +
-            s"${groupedById.values.map(_.size).sum} remaining")
+          logger.debug(
+            s"Filtered for paragraph starts, " +
+              s"${groupedById.values.map(_.size).sum} remaining"
+          )
         }
       }
     }
@@ -254,7 +267,7 @@ object CaptionDetector extends Logging {
     val filteredCaptionStarts = groupedById.filter {
       case (figId, captions) =>
         if (captions.size > MaxDuplicateCaptionNames ||
-          captions.groupBy(_.page).map(_._2.size).max > MaxSamePageDuplicateCaptionNames) {
+            captions.groupBy(_.page).map(_._2.size).max > MaxSamePageDuplicateCaptionNames) {
           logger.debug(s"Unable to disambiguate caption candidates for $figId, dropping")
           false
         } else {

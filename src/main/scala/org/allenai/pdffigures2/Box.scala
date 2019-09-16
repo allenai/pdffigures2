@@ -46,12 +46,14 @@ object Box {
       }
     }
     if (foundAny) {
-      Some(Box(
-        box.x1 + Math.max(shrinkLeft, 0),
-        box.y1 + Math.max(shrinkDown, 0),
-        box.x2 - Math.max(shrinkRight, 0),
-        box.y2 - Math.max(shrinkUp, 0)
-      ))
+      Some(
+        Box(
+          box.x1 + Math.max(shrinkLeft, 0),
+          box.y1 + Math.max(shrinkDown, 0),
+          box.x2 - Math.max(shrinkRight, 0),
+          box.y2 - Math.max(shrinkUp, 0)
+        )
+      )
     } else {
       None
     }

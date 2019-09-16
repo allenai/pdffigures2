@@ -1,6 +1,6 @@
 package org.allenai.pdffigures2
 
-import org.allenai.pdffigures2.FigureExtractor.{ DocumentWithSavedFigures, Document }
+import org.allenai.pdffigures2.FigureExtractor.{ Document, DocumentWithSavedFigures }
 import org.allenai.pdffigures2.SectionedTextBuilder.{ DocumentSection, PdfText }
 
 import spray.json._

@@ -36,8 +36,15 @@ object FigureRenderer {
     * @param img Image to expand the region on
     * @return The expanded region in pixel, inclusive coordinates of the form (x1, y1, x2, y2)
     */
-  def expandFigureBounds(x1: Int, y1: Int, x2: Int, y2: Int, otherContentScaled: Seq[Box],
-    contentPad: Int, img: BufferedImage): (Int, Int, Int, Int) = {
+  def expandFigureBounds(
+    x1: Int,
+    y1: Int,
+    x2: Int,
+    y2: Int,
+    otherContentScaled: Seq[Box],
+    contentPad: Int,
+    img: BufferedImage
+  ): (Int, Int, Int, Int) = {
     val h = img.getHeight
     val w = img.getWidth
     var newY1 = y1
@@ -49,27 +56,27 @@ object FigureRenderer {
     def intersectsAny(x1: Int, y1: Int, x2: Int, y2: Int): Boolean =
       Box(x1, y1, x2, y2).intersectsAny(otherContentScaled, contentPad)
 
-    // Expand while 1) we aren't at a border 2) we haven't exceeded `MaxExpand` 
+    // Expand while 1) we aren't at a border 2) we haven't exceeded `MaxExpand`
     // 3) we won't come close to any other content and
     // 4) doing so adds a non-empty pixel connected to an existing non-empty pixel
     while (newY1 > 0 && y1 - newY1 < MaxExpand &&
-      !intersectsAny(newX1, newY1 - 1, newX2, newY1) &&
-      Range(newX1, newX2 + 1).exists(x => isColored(x, newY1 - 1) && isColored(x, newY1))) {
+           !intersectsAny(newX1, newY1 - 1, newX2, newY1) &&
+           Range(newX1, newX2 + 1).exists(x => isColored(x, newY1 - 1) && isColored(x, newY1))) {
       newY1 -= 1
     }
     while (newY2 < h - 1 && newY2 - y2 < MaxExpand &&
-      !intersectsAny(newX1, newY2, newX2, newY2 + 1) &&
-      Range(newX1, newX2 + 1).exists(x => isColored(x, newY2 + 1) && isColored(x, newY2))) {
+           !intersectsAny(newX1, newY2, newX2, newY2 + 1) &&
+           Range(newX1, newX2 + 1).exists(x => isColored(x, newY2 + 1) && isColored(x, newY2))) {
       newY2 += 1
     }
     while (newX1 > 0 && x1 - newX1 < MaxExpand &&
-      !intersectsAny(newX1 - 1, newY1, newX1, newY2) &&
-      Range(newY1, newY2 + 1).exists(y => isColored(newX1, y) && isColored(newX1 - 1, y))) {
+           !intersectsAny(newX1 - 1, newY1, newX1, newY2) &&
+           Range(newY1, newY2 + 1).exists(y => isColored(newX1, y) && isColored(newX1 - 1, y))) {
       newX1 -= 1
     }
     while (newX2 < w - 1 && newX2 - x2 < MaxExpand &&
-      !intersectsAny(newX2, newY1, newX2 + 1, newY2) &&
-      Range(newY1, newY2 + 1).exists(y => isColored(newX2, y) && isColored(newX2 + 1, y))) {
+           !intersectsAny(newX2, newY1, newX2 + 1, newY2) &&
+           Range(newY1, newY2 + 1).exists(y => isColored(newX2, y) && isColored(newX2 + 1, y))) {
       newX2 += 1
     }
     (newX1, newY1, newX2, newY2)
@@ -78,8 +85,13 @@ object FigureRenderer {
   /** Rasterize the figures in `page` with `dpi` and optionally cleaning/post-processing the figure
     * regions
     */
-  def rasterizeFigures(doc: PDDocument, page: PageWithFigures, dpi: Int,
-    clean: Boolean, logger: Option[VisualLogger]): Seq[RasterizedFigure] = {
+  def rasterizeFigures(
+    doc: PDDocument,
+    page: PageWithFigures,
+    dpi: Int,
+    clean: Boolean,
+    logger: Option[VisualLogger]
+  ): Seq[RasterizedFigure] = {
     val scale = dpi / 72.0
     val nonFigureContent =
       ((page.classifiedText.allText ++ page.paragraphs).map(_.boundary) ++
@@ -98,12 +110,22 @@ object FigureRenderer {
         val x2 = Math.min(Math.ceil(scale * r.x2).toInt, pageImg.getWidth - 1)
         val y2 = Math.min(Math.ceil(scale * r.y2).toInt, pageImg.getHeight - 1)
         val (cx1, cy1, cx2, cy2) = if (clean) {
-          expandFigureBounds(x1, y1, x2, y2, nonFigureContent ++ otherFigureRegions,
-            PadNonFigureContent, pageImg)
+          expandFigureBounds(
+            x1,
+            y1,
+            x2,
+            y2,
+            nonFigureContent ++ otherFigureRegions,
+            PadNonFigureContent,
+            pageImg
+          )
         } else {
-          (Math.max(x1 - PadUnexpandedImage, 0), Math.max(y1 - PadUnexpandedImage, 0),
+          (
+            Math.max(x1 - PadUnexpandedImage, 0),
+            Math.max(y1 - PadUnexpandedImage, 0),
             Math.min(x2 + PadUnexpandedImage * 2, pageImg.getWidth - 1),
-            Math.min(y2 + PadUnexpandedImage * 2, pageImg.getHeight - 1))
+            Math.min(y2 + PadUnexpandedImage * 2, pageImg.getHeight - 1)
+          )
         }
         val figureImage = pageImg.getSubimage(cx1, cy1, cx2 - cx1 + 1, cy2 - cy1 + 1)
         val rasterizedFigure = RasterizedFigure(fig, Box(cx1, cy1, cx2, cy2), figureImage, dpi)
@@ -117,7 +139,8 @@ object FigureRenderer {
   /** Save rasterized figures in the given image format */
   def saveRasterizedFigures(
     figuresAndFilenames: Seq[(String, RasterizedFigure)],
-    format: String, dpi: Int
+    format: String,
+    dpi: Int
   ): Seq[SavedFigure] = {
     require(ImageIO.getWriterFormatNames.contains(format), s"Can't save to format $format")
     figuresAndFilenames.map {
@@ -128,8 +151,12 @@ object FigureRenderer {
   }
 
   /** Save figures to disk in a vector graphic format by shelling out to pdftocairo */
-  def saveFiguresAsImagesCairo(doc: PDDocument, figuresAndFilenames: Seq[(String, Figure)],
-    format: String, dpi: Int): Iterable[SavedFigure] = {
+  def saveFiguresAsImagesCairo(
+    doc: PDDocument,
+    figuresAndFilenames: Seq[(String, Figure)],
+    format: String,
+    dpi: Int
+  ): Iterable[SavedFigure] = {
     require(CairoFormat.contains(format), s"Cairo can't render to format $format")
     val groupedByPage = figuresAndFilenames.groupBy(_._2.page)
     groupedByPage.flatMap {

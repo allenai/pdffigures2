@@ -5,7 +5,7 @@ import org.allenai.common.Logging
 object RegionClassifier extends Logging {
 
   /** Base class of classes that classify text */
-  private abstract class TextClassifier() {
+  abstract private class TextClassifier() {
 
     /** @return return Some(true) iff `paragraph` appears to be figure text, Some(false) if it is
       *          body text, or None if unsure
@@ -14,7 +14,7 @@ object RegionClassifier extends Logging {
   }
 
   /** TextClassifier that can only confidently classify text as figure text */
-  private abstract class FigureTextDetector extends TextClassifier {
+  abstract private class FigureTextDetector extends TextClassifier {
     def isBodyText(paragraph: Paragraph): Option[Boolean] =
       if (isFigureText(paragraph)) Some(false) else None
     def isFigureText(paragraph: Paragraph): Boolean
@@ -39,8 +39,8 @@ object RegionClassifier extends Logging {
   private case class IsTitle(documentLayout: DocumentLayout) extends TextClassifier {
     override def isBodyText(paragraph: Paragraph): Option[Boolean] = {
       if (SectionTitleExtractor.isAlignedOrCentered(paragraph.boundary, documentLayout) &&
-        SectionTitleExtractor.isTitleStartText(paragraph.lines.head) &&
-        paragraph.lines.forall(l => SectionTitleExtractor.isTitleStyle(l, documentLayout))) {
+          SectionTitleExtractor.isTitleStartText(paragraph.lines.head) &&
+          paragraph.lines.forall(l => SectionTitleExtractor.isTitleStyle(l, documentLayout))) {
         Some(true)
       } else {
         None
@@ -50,14 +50,17 @@ object RegionClassifier extends Logging {
 
   /** Mark wide spaced paragraphs as figure text */
   private case class Spacing(
-      standardFontSize: Option[Double],
-      averageWordSpacing: Double
+    standardFontSize: Option[Double],
+    averageWordSpacing: Double
   ) extends FigureTextDetector {
     override def isFigureText(paragraph: Paragraph): Boolean = {
       val wordSpaces = paragraph.lines.flatMap { line =>
-        line.words.sliding(2).map { words =>
-          words.last.boundary.x1 - words.head.boundary.x2
-        }.filter(_ > 0)
+        line.words
+          .sliding(2)
+          .map { words =>
+            words.last.boundary.x1 - words.head.boundary.x2
+          }
+          .filter(_ > 0)
       }
       val wideSpacing = wordSpaces.nonEmpty && (
         wordSpaces.sum / wordSpaces.size.toDouble > averageWordSpacing + 5
@@ -84,8 +87,7 @@ object RegionClassifier extends Logging {
   }
 
   /** Mark small font paragraphs as figure text */
-  private case class SmallFont(standardFontSize: Option[Double])
-      extends FigureTextDetector {
+  private case class SmallFont(standardFontSize: Option[Double]) extends FigureTextDetector {
     override def isFigureText(paragraph: Paragraph): Boolean = {
       val smallStandardFont = if (standardFontSize.isDefined) {
         var total = 0
@@ -112,8 +114,8 @@ object RegionClassifier extends Logging {
   private case class LineWidth(standardWidth: Option[Double]) extends TextClassifier {
     override def isBodyText(paragraph: Paragraph): Option[Boolean] = {
       if (paragraph.lines.size > 2 && standardWidth.isDefined &&
-        Math.abs(paragraph.boundary.width - standardWidth.get) <
-        DocumentLayout.LineWidthBucketSize) {
+          Math.abs(paragraph.boundary.width - standardWidth.get) <
+            DocumentLayout.LineWidthBucketSize) {
         Some(true)
       } else {
         None
@@ -133,7 +135,7 @@ object RegionClassifier extends Logging {
         } else {
           val aligned = (
             leftMargins.getOrElse(Math.floor(paragraph.boundary.x1).toInt, 0.0) +
-            leftMargins.getOrElse(Math.ceil(paragraph.boundary.x1).toInt, 0.0)
+              leftMargins.getOrElse(Math.ceil(paragraph.boundary.x1).toInt, 0.0)
           ) > 0.18
           aligned && paragraph.boundary.area > 100
         }
@@ -230,20 +232,33 @@ object RegionClassifier extends Logging {
 
     // Try to detect graphic elements that that encompass a caption. If we find one we mark
     // the borders of that region as being a non-figure area
-    val (figuresBoundingBoxGraphics, rest) = graphics.partition(graphicRegion =>
-      page.captions.exists(c => graphicRegion.contains(c.boundary)
-        && graphicRegion.intersectArea(c.boundary) / graphicRegion.area < 0.50) &&
-        !paragraphs.exists(p => !graphicRegion.contains(p.boundary) &&
-          p.boundary.intersects(graphicRegion)))
+    val (figuresBoundingBoxGraphics, rest) = graphics.partition(
+      graphicRegion =>
+        page.captions.exists(
+          c =>
+            graphicRegion.contains(c.boundary)
+              && graphicRegion.intersectArea(c.boundary) / graphicRegion.area < 0.50
+        ) &&
+          !paragraphs.exists(
+            p =>
+              !graphicRegion.contains(p.boundary) &&
+                p.boundary.intersects(graphicRegion)
+          )
+    )
     val figureBoundingBoxes = figuresBoundingBoxGraphics.flatMap { box =>
-      Seq(box.copy(x2 = box.x1), box.copy(x1 = box.x2),
-        box.copy(y2 = box.y1), box.copy(y1 = box.y2))
+      Seq(
+        box.copy(x2 = box.x1),
+        box.copy(x1 = box.x2),
+        box.copy(y2 = box.y1),
+        box.copy(y1 = box.y2)
+      )
     }
 
     // Crop the surrounding region slightly, this a hacky way of making sure that in the case
     // a figures is bordered the returned region does not clip that border.
-    val croppedFigureGraphics = figuresBoundingBoxGraphics.map(box =>
-      box.copy(x1 = box.x1 + 3, x2 = box.x2 - 3, y1 = box.y1 + 3, y2 = box.y2 - 3))
+    val croppedFigureGraphics = figuresBoundingBoxGraphics.map(
+      box => box.copy(x1 = box.x1 + 3, x2 = box.x2 - 3, y1 = box.y1 + 3, y2 = box.y2 - 3)
+    )
 
     PageWithBodyText(
       page.pageNumber,

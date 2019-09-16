@@ -55,11 +55,14 @@ object GraphicsExtractor extends Logging {
     val bounds = Box.fromPDRect(doc.getPage(page).getCropBox)
     val graphics = GraphicBBDetector.findGraphicBB(doc.getPage(page), ignoreWhiteGraphics)
     if (graphics.exists(_.contains(bounds, 1)) ||
-      graphics.size == 1 && graphics.head.contains(bounds, OcrPageBoundsTolerance)) {
+        graphics.size == 1 && graphics.head.contains(bounds, OcrPageBoundsTolerance)) {
       if (allowOcr) {
         logger.debug(s"Page $page is an image, falling back to CC graphic detection")
-        val rasterCCs = FindGraphicsRaster.findCCBoundingBoxes(doc, page,
-          (textPage.classifiedText.allText ++ textPage.paragraphs).map(_.boundary))
+        val rasterCCs = FindGraphicsRaster.findCCBoundingBoxes(
+          doc,
+          page,
+          (textPage.classifiedText.allText ++ textPage.paragraphs).map(_.boundary)
+        )
         rasterCCs.filter(_.area > OcrGraphicMinSize) // Clean up noise/trailing character pixels
       } else {
         logger.debug(s"Page $page is an image and allow OCR is false, giving up")
@@ -77,15 +80,18 @@ object GraphicsExtractor extends Logging {
     */
   private def preprocessGraphics(
     graphics: List[Box],
-    text: PageWithClassifiedText, bounds: Box
+    text: PageWithClassifiedText,
+    bounds: Box
   ): (Seq[Box], Seq[Box]) = {
 
     // Try to detect if the page has "header line(s)", we either look for a line near the
     // head text, if any exist, else for a wide line above everything else on the page
     val pageHeader = text.classifiedText.pageHeaders
-    val (wideLines, nonLines) = graphics.partition(g =>
-      g.height < HeaderLineMinHeight && g.y1 < HeaderLineMinY1 &&
-        g.width / bounds.width > HeaderLineMinWidthPercent)
+    val (wideLines, nonLines) = graphics.partition(
+      g =>
+        g.height < HeaderLineMinHeight && g.y1 < HeaderLineMinY1 &&
+          g.width / bounds.width > HeaderLineMinWidthPercent
+    )
     val sortedWideLines = wideLines.sortBy(_.y1)
     val headerLine = if (sortedWideLines.isEmpty) {
       false
@@ -101,8 +107,8 @@ object GraphicsExtractor extends Logging {
       val secondHeaderLine = if (sortedWideLines.size > 1) {
         val secondLine = sortedWideLines(1)
         secondLine.y1 - sortedWideLines.head.y1 < SecondHeaderMinDistToFirst &&
-          Math.abs(sortedWideLines.head.x1 - secondLine.x1) < SecondHeaderMaxWidthDifference &&
-          Math.abs(sortedWideLines.head.x2 - secondLine.x2) < SecondHeaderMaxWidthDifference
+        Math.abs(sortedWideLines.head.x1 - secondLine.x1) < SecondHeaderMaxWidthDifference &&
+        Math.abs(sortedWideLines.head.x2 - secondLine.x2) < SecondHeaderMaxWidthDifference
       } else {
         false
       }
@@ -120,16 +126,19 @@ object GraphicsExtractor extends Logging {
     // Look for images boxes that hugs an entire side of the PDF, this usually indicates some kind
     // of colored / "side panel" or index inside the PDF
     val (sidePanel, graphicsToMerge) =
-      nonHeaderGraphic.partition(b =>
-        Math.abs(b.height - bounds.height) < 1 &&
-          (b.x1 < 1 || Math.abs(b.x2 - bounds.x2) < 1))
+      nonHeaderGraphic.partition(
+        b =>
+          Math.abs(b.height - bounds.height) < 1 &&
+            (b.x1 < 1 || Math.abs(b.x2 - bounds.x2) < 1)
+      )
 
     val merged = Box.mergeBoxes(graphicsToMerge, GraphicClusteringTolerance) // Cluster
     // Filter out graphics that look like they are 'mixed in' in with text, could be
     // part of an equation or an underline below some word
     val processedGraphics = merged.filterNot { box =>
-      box.area < MixedInGraphicMaxSize && text.paragraphs.exists(paragraph =>
-        paragraph.boundary.contains(box, MixedInGraphicContainsTolerance))
+      box.area < MixedInGraphicMaxSize && text.paragraphs.exists(
+        paragraph => paragraph.boundary.contains(box, MixedInGraphicContainsTolerance)
+      )
     }
     (processedGraphics, headerLines ++ sidePanel)
   }

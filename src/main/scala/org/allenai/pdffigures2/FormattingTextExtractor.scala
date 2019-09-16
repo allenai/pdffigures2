@@ -11,8 +11,8 @@ object FormattingTextExtractor extends Logging {
   /** @return any Paragraphs that appears to part of an abstract in `page` */
   def selectAbstract(page: Page): Seq[Paragraph] = {
     val paragraphs = page.paragraphs
-    val abstractStart = paragraphs.filter(p =>
-      AbstractRegex.pattern.matcher(p.lines.head.words.head.text).matches())
+    val abstractStart =
+      paragraphs.filter(p => AbstractRegex.pattern.matcher(p.lines.head.words.head.text).matches())
     if (abstractStart.size == 1) {
       logger.debug("Found abstract, marking as body text")
       val abstractParagraph = abstractStart.head
@@ -114,7 +114,7 @@ object FormattingTextExtractor extends Logging {
           val candidate = top2Paragraphs.head
           val aboveOtherText = topParagraphs.forall { paragraph =>
             paragraph.startLineNumber == candidate.startLineNumber ||
-              Math.abs(candidate.boundary.y2 - paragraph.boundary.y2) > 3
+            Math.abs(candidate.boundary.y2 - paragraph.boundary.y2) > 3
           }
           val validCandidate = candidate.lines.size <= 3 && aboveOtherText
           if (validCandidate) Some(candidate) else None
@@ -124,8 +124,8 @@ object FormattingTextExtractor extends Logging {
             val candidate = top2Paragraphs(1)
             val aboveOtherText = topParagraphs.forall { paragraph =>
               paragraph.startLineNumber == candidate.startLineNumber ||
-                paragraph.startLineNumber == firstCandidate.get.startLineNumber ||
-                Math.abs(candidate.boundary.y2 - paragraph.boundary.y2) > 3
+              paragraph.startLineNumber == firstCandidate.get.startLineNumber ||
+              Math.abs(candidate.boundary.y2 - paragraph.boundary.y2) > 3
             }
             val validCandidate = candidate.lines.size <= 3 && aboveOtherText
             if (validCandidate) Some(candidate) else None
@@ -144,8 +144,8 @@ object FormattingTextExtractor extends Logging {
       case (sc: Some[Paragraph], Some(_)) => sc
       case _ => None
     }
-    val secondHeaders = selectHeaderCandidates(textPages, prunedSecondCandidates,
-      minConsistentHeaders)
+    val secondHeaders =
+      selectHeaderCandidates(textPages, prunedSecondCandidates, minConsistentHeaders)
     firstHeaders.zip(secondHeaders).map(x => (x._1 ++ x._2).toSeq)
   }
 
@@ -202,21 +202,25 @@ object FormattingTextExtractor extends Logging {
     // pages were found to have a header/page number
     val minConsistentPages =
       textPages.size - (if (textPages.size < 3) {
-        0
-      } else if (textPages.size < 5) {
-        1
-      } else {
-        2
-      })
+                          0
+                        } else if (textPages.size < 5) {
+                          1
+                        } else {
+                          2
+                        })
 
     // Find headers and page numbers
     val headers = findHeaders(textPages, minConsistentPages)
     val pageNumbers = findPageNumber(textPages, minConsistentPages)
 
     // Look for an abstract in the first two pages
-    val documentAbstract = textPages.take(2).view.map { page =>
-      (page.pageNumber, selectAbstract(page))
-    }.find(_._2.nonEmpty)
+    val documentAbstract = textPages
+      .take(2)
+      .view
+      .map { page =>
+        (page.pageNumber, selectAbstract(page))
+      }
+      .find(_._2.nonEmpty)
     val abstractPageNum = if (documentAbstract.isDefined) Some(documentAbstract.get._1) else None
 
     val textWithoutHeaders = (textPages, headers, pageNumbers).zipped.map {
@@ -236,12 +240,13 @@ object FormattingTextExtractor extends Logging {
           }
           val pageNumberLocations = pageNumber.map(l => TextSpan(l.lineNumber, l.lineNumber))
           val headerLocations = header.map(_.span)
-          val abstractText = if (abstractPageNum.nonEmpty && abstractPageNum.get ==
-            textPage.pageNumber) {
-            documentAbstract.get._2
-          } else {
-            Seq()
-          }
+          val abstractText =
+            if (abstractPageNum.nonEmpty && abstractPageNum.get ==
+                  textPage.pageNumber) {
+              documentAbstract.get._2
+            } else {
+              Seq()
+            }
           // An easy way to get rid of titles, emails, and author names which can otherwise be hard
           // to classify, assume anything above the abstract is formatting text
           val aboveAbstractParagraph = if (abstractText.nonEmpty) {
@@ -250,7 +255,7 @@ object FormattingTextExtractor extends Logging {
               abstractText.map(_.startLineNumber)
             textPage.paragraphs.filter { paragraph =>
               paragraph.boundary.y2 < abstractY1 &&
-                !alreadyRemoved.contains(paragraph.startLineNumber)
+              !alreadyRemoved.contains(paragraph.startLineNumber)
             }
           } else {
             Seq()

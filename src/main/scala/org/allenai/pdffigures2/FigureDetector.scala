@@ -30,7 +30,7 @@ object FigureDetector {
   val cutFilterIntervalMax = 0.9
   val boundaryFilterMinDistance = 30
 
-  private sealed trait ProposalDirection
+  sealed private trait ProposalDirection
   private object ProposalDirection {
     case object Up extends ProposalDirection
     case object Left extends ProposalDirection
@@ -39,8 +39,12 @@ object FigureDetector {
   }
 
   /** Proposed region of the document that could contain a figure */
-  private case class Proposal(region: Box, caption: CaptionParagraph,
-    dir: ProposalDirection, splitWith: Option[(CaptionParagraph, Box)] = None)
+  private case class Proposal(
+    region: Box,
+    caption: CaptionParagraph,
+    dir: ProposalDirection,
+    splitWith: Option[(CaptionParagraph, Box)] = None
+  )
 
   /** Remove text that is contained within `regions` */
   private def removeTextInRegions(
@@ -69,8 +73,9 @@ object FigureDetector {
     * affects how we propose canddiate regions
     */
   private def findCenterColumn(page: PageWithBodyText): (Double, Double) = {
-    val textCenter = Box.container((page.bodyText ++ page.otherText).
-      map(_.boundary) ++ page.captions.map(_.boundary)).xCenter
+    val textCenter = Box
+      .container((page.bodyText ++ page.otherText).map(_.boundary) ++ page.captions.map(_.boundary))
+      .xCenter
 
     // Try to guess the column's based on the body text, but fall back on `textCenter` if
     // that does not appear to be working
@@ -115,10 +120,12 @@ object FigureDetector {
   ): Option[(Box, Box, Box)] = {
     val intersects = content.filter(_.intersects(proposalRegion))
     val emptyBlocks = Box.findEmptyHorizontalBlocks(proposalRegion, intersects)
-    val emptyBlocksNearCenter = emptyBlocks.filter(e =>
-      (e.y1 - proposalRegion.y1) > proposalRegion.height / SplitVerticalRegionMinHeightFraction &&
-        (proposalRegion.y2 - e.y2) > proposalRegion.height /
-        SplitVerticalRegionMinHeightFraction && e.height > 2)
+    val emptyBlocksNearCenter = emptyBlocks.filter(
+      e =>
+        (e.y1 - proposalRegion.y1) > proposalRegion.height / SplitVerticalRegionMinHeightFraction &&
+          (proposalRegion.y2 - e.y2) > proposalRegion.height /
+            SplitVerticalRegionMinHeightFraction && e.height > 2
+    )
     if (emptyBlocksNearCenter.isEmpty) {
       None
     } else {
@@ -126,7 +133,7 @@ object FigureDetector {
       val upper = Box.crop(proposalRegion.copy(y2 = largest.y1), intersects, -1)
       val lower = Box.crop(proposalRegion.copy(y1 = largest.y2), intersects, -1)
       if (lower.isDefined && upper.isDefined &&
-        lower.get.height > MinProposalHeight && upper.get.height > MinProposalHeight) {
+          lower.get.height > MinProposalHeight && upper.get.height > MinProposalHeight) {
         Some((upper.get, lower.get, largest))
       } else {
         None
@@ -158,8 +165,8 @@ object FigureDetector {
         group
       } else {
         if (group.size == 2 && group.exists(_.dir == ProposalDirection.Up) &&
-          group.exists(_.dir == ProposalDirection.Down) &&
-          (group.last.region.contains(group.head.region) ||
+            group.exists(_.dir == ProposalDirection.Down) &&
+            (group.last.region.contains(group.head.region) ||
             group.head.region.contains(group.last.region))) {
           val region = Box.container(group.map(_.region))
           val splitAttempt = splitRegionHorizontally(region, content)
@@ -267,8 +274,13 @@ object FigureDetector {
     }
   }
 
-  private def scoreProposal(proposal: Proposal, graphics: Seq[Box], otherText: Seq[Box],
-    otherProposals: Seq[Proposal], bounds: Box): Option[Double] = {
+  private def scoreProposal(
+    proposal: Proposal,
+    graphics: Seq[Box],
+    otherText: Seq[Box],
+    otherProposals: Seq[Proposal],
+    bounds: Box
+  ): Option[Double] = {
     val boundary = proposal.region
     if (otherProposals.exists(p => p.region.intersects(boundary, -2))) {
       None
@@ -289,7 +301,7 @@ object FigureDetector {
           areaScore *= SplitSameTypesPenalty
         }
       } else if (proposal.dir == ProposalDirection.Left ||
-        proposal.dir == ProposalDirection.Right) {
+                 proposal.dir == ProposalDirection.Right) {
         areaScore *= LeftRightFigurePenalty
       }
       Some(areaScore)
@@ -359,7 +371,8 @@ object FigureDetector {
     * caption
     */
   private def buildProposals(
-    page: PageWithBodyText, layout: DocumentLayout
+    page: PageWithBodyText,
+    layout: DocumentLayout
   ): Seq[List[Proposal]] = {
     val nonFigureContent = page.nonFigureContent
     val possibleFigureContent = page.possibleFigureContent
@@ -367,15 +380,20 @@ object FigureDetector {
     val bounds = Box.container(allContent)
 
     val otherTextWordsBBs = page.otherText.flatMap { paragraph =>
-      paragraph.lines.flatMap(line => line.words.map(word =>
-        // PDFBox can hugely overestimate word height at times, so we clip to a height of 5 if a box
-        // was given a really large height. We use a very conservative setting here since we will
-        // use these bounding boxes to filter candidate regions
-        if (word.boundary.height < 10) {
-          word.boundary
-        } else {
-          word.boundary.copy(y1 = word.boundary.y2 - 5.0f)
-        }))
+      paragraph.lines.flatMap(
+        line =>
+          line.words.map(
+            word =>
+              // PDFBox can hugely overestimate word height at times, so we clip to a height of 5 if a box
+              // was given a really large height. We use a very conservative setting here since we will
+              // use these bounding boxes to filter candidate regions
+              if (word.boundary.height < 10) {
+                word.boundary
+              } else {
+                word.boundary.copy(y1 = word.boundary.y2 - 5.0f)
+              }
+          )
+      )
     }
 
     val twoColumn = layout.twoColumns
@@ -420,12 +438,13 @@ object FigureDetector {
       if (x1 < captBox.x1 - MinProposalWidth) {
         val prop = boxExpandUD(
           captBox.copy(x1 = x1),
-          nonFigureContent, bounds
+          nonFigureContent,
+          bounds
         ).copy(x2 = captBox.x1)
         if (twoColumn) {
           val containsCenterElement = crossesCenter.exists(prop.contains(_, 2))
           if (containsCenterElement ||
-            !(prop.x1 < pageCenter.get && prop.x2 > pageCenter.get)) {
+              !(prop.x1 < pageCenter.get && prop.x2 > pageCenter.get)) {
             proposals = Proposal(prop, caption, ProposalDirection.Left) :: proposals
           }
         } else {
@@ -435,12 +454,13 @@ object FigureDetector {
       if (x2 > captBox.x2 + MinProposalWidth) {
         val prop = boxExpandUD(
           captBox.copy(x2 = x2),
-          nonFigureContent, bounds
+          nonFigureContent,
+          bounds
         ).copy(x1 = captBox.x2)
         if (twoColumn) {
           val containsCenterElement = crossesCenter.exists(prop.contains(_, 2))
           if (containsCenterElement ||
-            !(prop.x1 < pageCenter.get && prop.x2 > pageCenter.get)) {
+              !(prop.x1 < pageCenter.get && prop.x2 > pageCenter.get)) {
             proposals = Proposal(prop, caption, ProposalDirection.Right) :: proposals
           }
         } else {
@@ -450,7 +470,8 @@ object FigureDetector {
       if (y1 < captBox.y1 - MinProposalHeight) {
         val prop = boxExpandLR(
           captBox.copy(y1 = y1),
-          nonFigureContent, bounds
+          nonFigureContent,
+          bounds
         ).copy(y2 = captBox.y1)
         val cropped = if (twoColumn) {
           cropToCenter(captBox, prop, crossesCenter, pageCenter.get)
@@ -463,7 +484,8 @@ object FigureDetector {
       if (y2 > captBox.y2 + MinProposalHeight) {
         val prop = boxExpandLR(
           captBox.copy(y2 = y2),
-          nonFigureContent, bounds
+          nonFigureContent,
+          bounds
         ).copy(y1 = captBox.y2)
         val cropped = if (twoColumn) {
           cropToCenter(captBox, prop, crossesCenter, pageCenter.get)
@@ -476,10 +498,11 @@ object FigureDetector {
       proposals = proposals.flatMap { prop =>
         // -1 so we do not count boxes the overlap exactly on the border
         Box.crop(prop.region, allContent, -1) match {
-          case Some(cropped) if cropped.width > MinProposalWidth &&
-            cropped.height > MinProposalHeight =>
-            val partiallyIntersectsWord = otherTextWordsBBs.exists(b =>
-              b.intersects(cropped, -2) && !cropped.contains(b, 1))
+          case Some(cropped)
+              if cropped.width > MinProposalWidth &&
+                cropped.height > MinProposalHeight =>
+            val partiallyIntersectsWord =
+              otherTextWordsBBs.exists(b => b.intersects(cropped, -2) && !cropped.contains(b, 1))
             if (partiallyIntersectsWord) {
               None
             } else {
@@ -530,47 +553,70 @@ object FigureDetector {
       PageWithFigures(
         page.pageNumber,
         (page.otherText ++ page.bodyText ++ captionsWithNoProposals.map(_.paragraph)).sorted.toList,
-        page.classifiedText, List(), captionsWithNoProposals.map(Caption.apply)
+        page.classifiedText,
+        List(),
+        captionsWithNoProposals.map(Caption.apply)
       )
     } else {
-      val bestConfiguration = cartesianProduct(validProposals.toList).view.zipWithIndex.map {
-        case (proposalsToUse, index) =>
-          var props = splitProposals(proposalsToUse, allContent).toList
-          var scored = List[Proposal]()
-          var scores = List[Option[Double]]()
-          while (props.nonEmpty) {
-            val prop = props.head
-            props = props.tail
-            val score = scoreProposal(
-              prop,
-              page.graphics, page.otherText.map(_.boundary),
-              scored ::: props, bounds
-            )
-            scored = prop :: scored
-            scores = score :: scores
-          }
-          val overallScore = scores.flatMap(x => x).sum - scores.count(_.isEmpty)
-          (overallScore, scored.zip(scores).reverse)
-      }.maxBy(_._1)
+      val bestConfiguration = cartesianProduct(validProposals.toList).view.zipWithIndex
+        .map {
+          case (proposalsToUse, index) =>
+            var props = splitProposals(proposalsToUse, allContent).toList
+            var scored = List[Proposal]()
+            var scores = List[Option[Double]]()
+            while (props.nonEmpty) {
+              val prop = props.head
+              props = props.tail
+              val score = scoreProposal(
+                prop,
+                page.graphics,
+                page.otherText.map(_.boundary),
+                scored ::: props,
+                bounds
+              )
+              scored = prop :: scored
+              scores = score :: scores
+            }
+            val overallScore = scores.flatMap(x => x).sum - scores.count(_.isEmpty)
+            (overallScore, scored.zip(scores).reverse)
+        }
+        .maxBy(_._1)
 
       val (goodProps, badProps) = bestConfiguration._2.partition(_._2.isDefined)
       val figures = goodProps.map {
         case (proposal, _) =>
-          val imageText = page.otherText.flatMap(p => p.lines.flatMap { l =>
-            l.words.flatMap {
-              case word => if (proposal.region.contains(word.boundary, 1)) Some(word.text) else None
-            }
-          })
+          val imageText = page.otherText.flatMap(
+            p =>
+              p.lines.flatMap { l =>
+                l.words.flatMap {
+                  case word =>
+                    if (proposal.region.contains(word.boundary, 1)) Some(word.text) else None
+                }
+              }
+          )
           val caption = proposal.caption
-          Figure(caption.name, caption.figType, caption.page, caption.text, imageText,
-            caption.boundary, proposal.region)
+          Figure(
+            caption.name,
+            caption.figType,
+            caption.page,
+            caption.text,
+            imageText,
+            caption.boundary,
+            proposal.region
+          )
       }
       val failedCaptions = badProps.map(_._1.caption) ++ captionsWithNoProposals
       val nonFigureText = removeTextInRegions(
-        (page.otherText ++ page.bodyText).toList, figures.map(_.regionBoundary)
+        (page.otherText ++ page.bodyText).toList,
+        figures.map(_.regionBoundary)
       ) ++ failedCaptions.map(_.paragraph)
-      PageWithFigures(page.pageNumber, nonFigureText.sorted,
-        page.classifiedText, figures, failedCaptions.map(Caption.apply))
+      PageWithFigures(
+        page.pageNumber,
+        nonFigureText.sorted,
+        page.classifiedText,
+        figures,
+        failedCaptions.map(Caption.apply)
+      )
     }
   }
 }

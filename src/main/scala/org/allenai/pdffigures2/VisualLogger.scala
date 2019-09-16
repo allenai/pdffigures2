@@ -10,8 +10,13 @@ import javax.imageio.ImageIO
 import java.io.File
 import javax.swing._
 
-case class Annotations(boxes: Seq[Box], color: Color, thickness: Int = 1,
-  fill: Boolean = false, dashed: Boolean = false)
+case class Annotations(
+  boxes: Seq[Box],
+  color: Color,
+  thickness: Int = 1,
+  fill: Boolean = false,
+  dashed: Boolean = false
+)
 
 object VisualLogger {
   val FigureRegionColor = Color.GREEN
@@ -33,8 +38,13 @@ object VisualLogger {
   * internally accumulated. Can only be used for logging the processing of a single document
   */
 class VisualLogger(
-    logFigures: Boolean, logExtraction: Boolean, logGraphicClustering: Boolean,
-    logCaptions: Boolean, logRegions: Boolean, logSections: Boolean, logCleanFigures: Boolean
+  logFigures: Boolean,
+  logExtraction: Boolean,
+  logGraphicClustering: Boolean,
+  logCaptions: Boolean,
+  logRegions: Boolean,
+  logSections: Boolean,
+  logCleanFigures: Boolean
 ) {
 
   val GraphicsClusterKey = "Graphic Clustering"
@@ -46,8 +56,15 @@ class VisualLogger(
   val SectionsKey = "Sections"
 
   // Ordered in how they will be shown to the user
-  val ReservedKeys = Seq(GraphicsClusterKey, TextAndGraphicsExtractionKey,
-    CaptionLocationKey, RegionClassificationKey, FiguresKey, CleanedFiguresKey, SectionsKey)
+  val ReservedKeys = Seq(
+    GraphicsClusterKey,
+    TextAndGraphicsExtractionKey,
+    CaptionLocationKey,
+    RegionClassificationKey,
+    FiguresKey,
+    CleanedFiguresKey,
+    SectionsKey
+  )
 
   // Maps: annotation layer name => page number => Annotations for that layer/page
   private var logs: Map[String, Map[Int, Seq[Annotations]]] = Map().withDefault(_ => Map())
@@ -55,7 +72,9 @@ class VisualLogger(
   // BufferedImages don't have a copy/clone method so we provide one here
   private def cloneImage(bufferedImage: BufferedImage): BufferedImage = {
     val copy = new BufferedImage(
-      bufferedImage.getWidth, bufferedImage.getHeight, bufferedImage.getType
+      bufferedImage.getWidth,
+      bufferedImage.getHeight,
+      bufferedImage.getType
     )
     copy.setData(bufferedImage.getRaster)
     copy
@@ -78,18 +97,34 @@ class VisualLogger(
           annotations.foreach { annotation =>
             g.setColor(annotation.color)
             val dash = if (annotation.dashed) Array[Float](2) else null
-            g.setStroke(new BasicStroke(annotation.thickness, BasicStroke.CAP_BUTT,
-              BasicStroke.JOIN_BEVEL, 0.0f, dash, 0.0f))
+            g.setStroke(
+              new BasicStroke(
+                annotation.thickness,
+                BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_BEVEL,
+                0.0f,
+                dash,
+                0.0f
+              )
+            )
             annotation.boxes.foreach { box =>
               if (annotation.fill) {
                 // Stop narrow lines disappearing in this mode by making the minimum width/height 3
                 val w = Math.max(box.width, 3)
                 val h = Math.max(box.height, 3)
-                g.fillRect((box.x1 * scaling).toInt, (box.y1 * scaling).toInt,
-                  (w * scaling).toInt, (h * scaling).toInt)
+                g.fillRect(
+                  (box.x1 * scaling).toInt,
+                  (box.y1 * scaling).toInt,
+                  (w * scaling).toInt,
+                  (h * scaling).toInt
+                )
               } else {
-                g.drawRect((box.x1 * scaling - 2).toInt, (box.y1 * scaling - 2).toInt,
-                  (box.width * scaling + 4).toInt, (box.height * scaling + 4).toInt)
+                g.drawRect(
+                  (box.x1 * scaling - 2).toInt,
+                  (box.y1 * scaling - 2).toInt,
+                  (box.width * scaling + 4).toInt,
+                  (box.height * scaling + 4).toInt
+                )
               }
             }
           }
@@ -140,7 +175,8 @@ class VisualLogger(
 
       // So our frame can be closed by hot key, on OSX this means at least Cmd-W works
       val closeKey = KeyStroke.getKeyStroke(
-        KeyEvent.VK_W, Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
+        KeyEvent.VK_W,
+        Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
       )
       panel.getInputMap.put(closeKey, "closeWindow")
       panel.getActionMap.put(
@@ -178,7 +214,9 @@ class VisualLogger(
     if (logGraphicClustering) {
       val graphicAnnotation = Annotations(raw, VisualLogger.GraphicalElementColor, dashed = true)
       val clusteredAnnotation = Annotations(
-        clustered, VisualLogger.GraphicClusterColor, 4
+        clustered,
+        VisualLogger.GraphicClusterColor,
+        4
       )
       val annotations = Seq(graphicAnnotation, clusteredAnnotation)
       addToLog(pageNum, GraphicsClusterKey, annotations)
@@ -190,7 +228,8 @@ class VisualLogger(
       val graphicAnnotation = Annotations(page.graphics, VisualLogger.GraphicalElementColor)
       val paragraphAnnotation = Annotations(
         page.paragraphs.map(_.boundary),
-        VisualLogger.ParagraphColor, 2
+        VisualLogger.ParagraphColor,
+        2
       )
       val lineAnnotation = Annotations(
         page.paragraphs.flatMap(_.lines.map(_.boundary)),
@@ -198,10 +237,11 @@ class VisualLogger(
       )
       val nonFigureAnnotation = Annotations(
         page.classifiedText.allText.map(_.boundary) ++
-          page.nonFigureGraphics, VisualLogger.NonFigureColor
+          page.nonFigureGraphics,
+        VisualLogger.NonFigureColor
       )
-      val annotations = Seq(graphicAnnotation, paragraphAnnotation,
-        lineAnnotation, nonFigureAnnotation)
+      val annotations =
+        Seq(graphicAnnotation, paragraphAnnotation, lineAnnotation, nonFigureAnnotation)
       addToLog(page.pageNumber, TextAndGraphicsExtractionKey, annotations)
     }
   }
@@ -210,11 +250,14 @@ class VisualLogger(
     if (logFigures) {
       val regionBB = Annotations(figures.map(_.regionBoundary), Color.GREEN, 2)
       val captionBB = Annotations(figures.map(_.captionBoundary), Color.BLUE, 2)
-      val joint = Annotations(regionBB.boxes.zip(captionBB.boxes).map {
-        case (region, capt) =>
-          val c = Box.container(Seq(region, capt))
-          Box(c.x1 - 4, c.y1 - 4, c.x2 + 4, c.y2 + 4)
-      }, VisualLogger.JointCaptionFigureColor)
+      val joint = Annotations(
+        regionBB.boxes.zip(captionBB.boxes).map {
+          case (region, capt) =>
+            val c = Box.container(Seq(region, capt))
+            Box(c.x1 - 4, c.y1 - 4, c.x2 + 4, c.y2 + 4)
+        },
+        VisualLogger.JointCaptionFigureColor
+      )
       val annotations = Seq(regionBB, captionBB, joint)
       addToLog(page, FiguresKey, annotations)
     }
@@ -228,7 +271,8 @@ class VisualLogger(
       )
       val cleanedBB = Annotations(
         figures.map(f => f.imageRegion.scale(72.0 / f.dpi)),
-        VisualLogger.CleanedFigureColor, dashed = true
+        VisualLogger.CleanedFigureColor,
+        dashed = true
       )
       addToLog(page, CleanedFiguresKey, Seq(regionBB, cleanedBB))
     }
@@ -248,8 +292,13 @@ class VisualLogger(
   def logRegions(regions: PageWithBodyText): Unit = {
     if (logRegions) {
       val allAnnotations = Seq(
-        Annotations(regions.nonFigureGraphics ++ regions.classifiedText.allText.map(_.boundary) ++
-          regions.bodyText.map(_.boundary), VisualLogger.NonFigureColor, 3, true),
+        Annotations(
+          regions.nonFigureGraphics ++ regions.classifiedText.allText.map(_.boundary) ++
+            regions.bodyText.map(_.boundary),
+          VisualLogger.NonFigureColor,
+          3,
+          true
+        ),
         Annotations(regions.otherText.map(_.boundary), VisualLogger.OtherTextColor, 1),
         Annotations(regions.captions.map(_.boundary), VisualLogger.CaptionColor, 1, true),
         Annotations(regions.graphics, VisualLogger.GraphicalElementColor)

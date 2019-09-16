@@ -61,9 +61,16 @@ object CaptionBuilder extends Logging {
   ): PageWithCaptions = {
     if (candidates.nonEmpty) {
       val captionStartLocations = candidates.map(_.line.lineNumber)
-      val captions = candidates.map(c =>
-        buildCaption(c, captionStartLocations, text.paragraphs,
-          text.graphics, medianLineSpacing + MedianSpacingPadding))
+      val captions = candidates.map(
+        c =>
+          buildCaption(
+            c,
+            captionStartLocations,
+            text.paragraphs,
+            text.graphics,
+            medianLineSpacing + MedianSpacingPadding
+          )
+      )
 
       val textWithoutCaptions = Paragraph.removeSpans(
         captions.map(_.paragraph.span),
@@ -93,8 +100,12 @@ object CaptionBuilder extends Logging {
   /** An 'in-progress' Caption, keeps track of the font used in the Caption and whether all the
     * lines added so far are centered
     */
-  private case class CaptionBuilder(lines: List[Line], boundary: Box,
-      font: Option[PDFont], centered: Boolean) {
+  private case class CaptionBuilder(
+    lines: List[Line],
+    boundary: Box,
+    font: Option[PDFont],
+    centered: Boolean
+  ) {
     def lastLineRightAligned: Boolean = Math.abs(boundary.x2 - lines.last.boundary.x2) < 2.0
     def addLine(line: Line, newBoundary: Box, lineFont: Option[PDFont]): CaptionBuilder = {
       val newFont = (font, lineFont) match {
@@ -124,8 +135,8 @@ object CaptionBuilder extends Logging {
     safeLineSpacing: Double
   ): CaptionParagraph = {
 
-    val linesWithParagraphs = paragraphs.flatMap {
-      paragraph => paragraph.lines.map(line => (line, paragraph))
+    val linesWithParagraphs = paragraphs.flatMap { paragraph =>
+      paragraph.lines.map(line => (line, paragraph))
     }
     val linesStartingAtCaption = linesWithParagraphs.dropWhile {
       case (line, _) => line.lineNumber < candidate.line.lineNumber
@@ -134,7 +145,10 @@ object CaptionBuilder extends Logging {
 
     val startingLine = linesStartingAtCaption.head._1
     var currentCaption = CaptionBuilder(
-      List(startingLine), startingLine.boundary, getLineFont(startingLine), true
+      List(startingLine),
+      startingLine.boundary,
+      getLineFont(startingLine),
+      true
     )
 
     // Avoid lines that intersect graphical regions, UNLESS that region includes the first line
@@ -156,49 +170,55 @@ object CaptionBuilder extends Logging {
         val fontChange = lineFont.isDefined && currentCaption.font.isDefined &&
           !firstLineAfterSingleLineHeader && !lineFont.get.equals(currentCaption.font.get)
 
-        val useLine = if (yDist < MinYDistBetweenLines ||
-          yDist > safeLineSpacing + MaxAdditionalSpacing) {
-          // Line is too far away
-          false
-        } else if (graphicsToAvoid.exists(bb =>
-          bb.intersects(proposedBB, GraphicIntersectTolerance)) ||
-          captionLocations.contains(line.lineNumber)) {
-          // The line either starts a new caption, or intersects some graphical element, don't use
-          false
-        } else if (yDist < LineContinuationMaxYDifference &&
-          currentCaption.lines.last.boundary.x2 - lineBB.x1 < LineContinuationMaxXDifference) {
-          // Line is a continuation/to the right of the previous line
-          true
-        } else if (fontChange && !firstLineAfterSingleLineHeader) {
-          // Line starts a new font, don't use
-          false
-        } else if (yDist < safeLineSpacing && yDist > 0 &&
-          Math.abs(currentBoundary.x1 - lineBB.x1) < AlignmentTolerance) {
-          // Line is within the standard spacing and left-aligned to the caption, use
-          true
-        } else {
-          // Last resort, add the line as long as no other formatting cues fire
-          val centered = Math.abs(lineBB.xCenter - currentBoundary.xCenter) < AlignmentTolerance
-          val overlapsHorizontal = lineBB.x1 < currentBoundary.x2 &&
-            lineBB.x2 > currentBoundary.x1 &&
-            (currentBoundary.x1 - proposedBB.x1 < LeftEdgeDifferenceTolerance
-              || firstLineAfterSingleLineHeader)
-          val startingLargeParagraph =
-            line.lineNumber == paragraph.lines.head.lineNumber &&
-              paragraph.lines.size >= LargeParagraphNumberOfLines
-          val breaksJustification =
-            !currentCaption.lastLineRightAligned && !(currentCaption.centered && centered)
-          if (overlapsHorizontal && !startingLargeParagraph && !breaksJustification) {
+        val useLine =
+          if (yDist < MinYDistBetweenLines ||
+              yDist > safeLineSpacing + MaxAdditionalSpacing) {
+            // Line is too far away
+            false
+          } else if (graphicsToAvoid.exists(
+                       bb => bb.intersects(proposedBB, GraphicIntersectTolerance)
+                     ) ||
+                     captionLocations.contains(line.lineNumber)) {
+            // The line either starts a new caption, or intersects some graphical element, don't use
+            false
+          } else if (yDist < LineContinuationMaxYDifference &&
+                     currentCaption.lines.last.boundary.x2 - lineBB.x1 < LineContinuationMaxXDifference) {
+            // Line is a continuation/to the right of the previous line
+            true
+          } else if (fontChange && !firstLineAfterSingleLineHeader) {
+            // Line starts a new font, don't use
+            false
+          } else if (yDist < safeLineSpacing && yDist > 0 &&
+                     Math.abs(currentBoundary.x1 - lineBB.x1) < AlignmentTolerance) {
+            // Line is within the standard spacing and left-aligned to the caption, use
             true
           } else {
-            false
+            // Last resort, add the line as long as no other formatting cues fire
+            val centered = Math.abs(lineBB.xCenter - currentBoundary.xCenter) < AlignmentTolerance
+            val overlapsHorizontal = lineBB.x1 < currentBoundary.x2 &&
+              lineBB.x2 > currentBoundary.x1 &&
+              (currentBoundary.x1 - proposedBB.x1 < LeftEdgeDifferenceTolerance
+                || firstLineAfterSingleLineHeader)
+            val startingLargeParagraph =
+              line.lineNumber == paragraph.lines.head.lineNumber &&
+                paragraph.lines.size >= LargeParagraphNumberOfLines
+            val breaksJustification =
+              !currentCaption.lastLineRightAligned && !(currentCaption.centered && centered)
+            if (overlapsHorizontal && !startingLargeParagraph && !breaksJustification) {
+              true
+            } else {
+              false
+            }
           }
-        }
         if (useLine) currentCaption = currentCaption.addLine(line, proposedBB, lineFont)
         useLine
     }
 
-    CaptionParagraph(candidate.name, candidate.figType, candidate.page,
-      pruneCaptionParagraph(Paragraph(currentCaption.lines, currentCaption.boundary)))
+    CaptionParagraph(
+      candidate.name,
+      candidate.figType,
+      candidate.page,
+      pruneCaptionParagraph(Paragraph(currentCaption.lines, currentCaption.boundary))
+    )
   }
 }
