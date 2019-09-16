@@ -8,15 +8,15 @@ import scala.collection.{ immutable, mutable }
 
 /** Store some statistics about the document as a whole */
 case class DocumentLayout(
-    twoColumns: Boolean,
-    fontCounts: immutable.Map[PDFont, Double],
-    standardFontSize: Option[Double],
-    averageFontSize: Double,
-    averageWordSpacing: Double,
-    trustLeftMargin: Boolean,
-    leftMargins: immutable.Map[Int, Double],
-    medianLineSpacing: Double,
-    standardWidthBucketed: Option[Double]
+  twoColumns: Boolean,
+  fontCounts: immutable.Map[PDFont, Double],
+  standardFontSize: Option[Double],
+  averageFontSize: Double,
+  averageWordSpacing: Double,
+  trustLeftMargin: Boolean,
+  leftMargins: immutable.Map[Int, Double],
+  medianLineSpacing: Double,
+  standardWidthBucketed: Option[Double]
 ) {
   require(averageFontSize >= 0, "font size cannot be < 0")
   require(averageWordSpacing > 0, "word spacing should only consider words with > 0 spacing")
@@ -151,7 +151,7 @@ object DocumentLayout extends Logging {
         val diff = Math.abs(mostCommon._2 - secondMostCommon._2) /
           (mostCommon._2 + secondMostCommon._2).toDouble
         diff < TwoColumnMaxUsageDifference &&
-          Math.abs(mostCommon._1 - secondMostCommon._1) > TwoColumnMaxXDifference
+        Math.abs(mostCommon._1 - secondMostCommon._1) > TwoColumnMaxXDifference
       } else {
         false
       }
@@ -168,22 +168,29 @@ object DocumentLayout extends Logging {
         case (margin, count) => (margin, count / totalMarginCounts.toDouble)
       }
       val trustMargins = if (twoColumn) {
-        val wordsInTopMargins = sortedMarginsByPercent.
-          take(TrustMarginsNumMarginsToCount * 2).map(_._2).sum
+        val wordsInTopMargins =
+          sortedMarginsByPercent.take(TrustMarginsNumMarginsToCount * 2).map(_._2).sum
         wordsInTopMargins > TrustMarginsTwoColumnThreshold
       } else {
-        val wordsInTopMargins = sortedMarginsByPercent.
-          take(TrustMarginsNumMarginsToCount).map(_._2).sum
+        val wordsInTopMargins =
+          sortedMarginsByPercent.take(TrustMarginsNumMarginsToCount).map(_._2).sum
         wordsInTopMargins > TrustMarginsOneColumnThreshold
       }
 
       if (!trustMargins) logger.debug("Margins appear to be inconsistent, won't use in heuristics")
 
-      val layout = DocumentLayout(twoColumn, fontPercents, standardFontSize,
-        averageFontSize, totalWordSpacing / totalWordSpaces,
-        trustMargins, sortedMarginsByPercent.toMap, medianLineSpacing, standardLineWidth)
+      val layout = DocumentLayout(
+        twoColumn,
+        fontPercents,
+        standardFontSize,
+        averageFontSize,
+        totalWordSpacing / totalWordSpaces,
+        trustMargins,
+        sortedMarginsByPercent.toMap,
+        medianLineSpacing,
+        standardLineWidth
+      )
       Some(layout)
     }
   }
 }
-

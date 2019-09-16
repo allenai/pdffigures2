@@ -91,7 +91,7 @@ private class TextExtractor extends PDFTextStripper with Logging {
     super.writeParagraphEnd()
   }
 
-  protected override def writeString(
+  override protected def writeString(
     text: String,
     textPositions: java.util.List[TextPosition]
   ): Unit = {
@@ -114,8 +114,10 @@ private class TextExtractor extends PDFTextStripper with Logging {
           val bb = Box(minX, minY, maxX, maxY)
           wordsInLine.append(Word(stringBuilder.toString(), bb, wordTextPositions.toList))
         } else {
-          logger.warn(s"""Word "${stringBuilder.toString()}" on page $onPage had a negative """ +
-            "height or width, skipping")
+          logger.warn(
+            s"""Word "${stringBuilder.toString()}" on page $onPage had a negative """ +
+              "height or width, skipping"
+          )
         }
       }
     }
@@ -124,7 +126,7 @@ private class TextExtractor extends PDFTextStripper with Logging {
       val pos = textPositions.get(onTextPosition)
       val unicode = pos.getUnicode
       if (unicode.length == 1 &&
-        (Character.isISOControl(unicode.charAt(0)) ||
+          (Character.isISOControl(unicode.charAt(0)) ||
           Character.isWhitespace(unicode.charAt(0)))) {
         if (stringBuilder.nonEmpty) {
           addText()
@@ -166,7 +168,7 @@ private class TextExtractor extends PDFTextStripper with Logging {
 
   override def writeLineSeparator(): Unit = lineFinished()
 
-  // Overwrite this methods for efficiency since they do not do any text organization 
+  // Overwrite this methods for efficiency since they do not do any text organization
   override def writePageStart(): Unit = {}
   override def writeWordSeparator(): Unit = {}
   override def writeParagraphStart(): Unit = {}

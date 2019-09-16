@@ -69,17 +69,17 @@ object SectionTitleExtractor extends Logging {
     // estimated as being very large (ex. 99pt, 100pt), seemingly because PDFBox will sometimes
     // marks large amounts of text as having this font size
     val trustFontSize = layout.standardFontSize.nonEmpty && layout.standardFontSize.get < 20
-    val smallFont = trustFontSize && line.words.flatMap(_.positions).count {
-      pos => pos.getFontSizeInPt < layout.standardFontSize.get - 1.0
+    val smallFont = trustFontSize && line.words.flatMap(_.positions).count { pos =>
+      pos.getFontSizeInPt < layout.standardFontSize.get - 1.0
     } > numChars / 2
 
     // Characters should all be the same font/font size, expect we want to give exceptions to some
     // unicode characters (like mathematical systems). So we only check larger words without
     // unicode characters.
-    val asciiChars = line.words.
-      filter(_.positions.size > 2).
-      filter(_.positions.forall(isNormalText)).
-      flatMap(_.positions)
+    val asciiChars = line.words
+      .filter(_.positions.size > 2)
+      .filter(_.positions.forall(isNormalText))
+      .flatMap(_.positions)
     val sameFont = asciiChars.nonEmpty &&
       asciiChars.tail.forall(_.getFont.equals(asciiChars.head.getFont))
 
@@ -95,21 +95,22 @@ object SectionTitleExtractor extends Logging {
   private def isEquation(line: Line): Boolean = {
     val nonStandardChar = line.words.flatMap(_.positions).count { position =>
       position.getUnicode.length > 1 ||
-        !Character.isLetter(position.getUnicode.head) ||
-        position.getUnicode.head > 128
+      !Character.isLetter(position.getUnicode.head) ||
+      position.getUnicode.head > 128
     }
     val numChars = line.words.map(_.positions.size).sum
     !isPrefixed(line) && nonStandardChar > 3 && nonStandardChar > numChars * 0.4
   }
 
   private val ListRegex = """^([1-9][0-9]*|[IVX]+)(.|:)?""".r
+
   /** @return whether `line` appears to part of list, like 'Definition 1', theses lists often have
     * formatting characteristics similar to headers so we filter for them based on content
     */
   def isList(line: Line): Boolean = {
     line.words.size > 1 &&
-      Character.isUpperCase(line.words.head.text.head) &&
-      ListRegex.findFirstIn(line.words.tail.head.text).nonEmpty
+    Character.isUpperCase(line.words.head.text.head) &&
+    ListRegex.findFirstIn(line.words.tail.head.text).nonEmpty
   }
 
   // Last resort try to filter on some simple text based heuristics
@@ -129,9 +130,9 @@ object SectionTitleExtractor extends Logging {
     } else {
       // Try to detect ordinary sentences by the presence of many uncapitalized words
       val words = sectionTitle.lines.flatMap(_.words)
-      val largeNormalWords = words.
-        filter(w => w.positions.size > 3 && Character.isLetter(w.text.head)).
-        filter(_.positions.forall(isNormalText))
+      val largeNormalWords = words
+        .filter(w => w.positions.size > 3 && Character.isLetter(w.text.head))
+        .filter(_.positions.forall(isNormalText))
       if (!sectionTitle.isPrefixed && largeNormalWords.size > 3) {
         val numNonCapitalized = largeNormalWords.count { w =>
           !Character.isUpperCase(w.positions.head.getUnicode.head)
@@ -148,7 +149,8 @@ object SectionTitleExtractor extends Logging {
 
   private def isFarFromPreviousLine(
     line: Line,
-    prevLine: Option[Line], layout: DocumentLayout
+    prevLine: Option[Line],
+    layout: DocumentLayout
   ): Boolean = {
     if (prevLine.isDefined) {
       // Only do this check if the height is reasonable to avoid getting thrown by PDFBox widely
@@ -161,8 +163,11 @@ object SectionTitleExtractor extends Logging {
     }
   }
 
-  private def isLineBeginningSection(line: Line, current: SectionTitle,
-    layout: DocumentLayout): Boolean = {
+  private def isLineBeginningSection(
+    line: Line,
+    current: SectionTitle,
+    layout: DocumentLayout
+  ): Boolean = {
     val yDist = line.boundary.y1 - current.boundary.y2
     val close = yDist < layout.medianLineSpacing
     val rightAndLeftAligned =
@@ -171,7 +176,7 @@ object SectionTitleExtractor extends Logging {
     val largeFont = current.fontSize >
       layout.standardFontSize.getOrElse(layout.averageFontSize + 2.0)
     (line.words.size > 3 || Character.isUpperCase(line.words.head.text.head)) &&
-      current.lines.last.text.last != '-' && (largeFont || !close || !rightAndLeftAligned)
+    current.lines.last.text.last != '-' && (largeFont || !close || !rightAndLeftAligned)
   }
 
   private object SectionTitle {
@@ -188,8 +193,13 @@ object SectionTitleExtractor extends Logging {
   /** An "in progress" SectionTitle. `lines` contains the first line in the section title, but
     * there might be additional lines to add to this SectionTitle that have not be identified yet.
     */
-  private case class SectionTitle(lines: List[Line], boundary: Box, isPrefixed: Boolean,
-      font: PDFont, fontSize: Double) {
+  private case class SectionTitle(
+    lines: List[Line],
+    boundary: Box,
+    isPrefixed: Boolean,
+    font: PDFont,
+    fontSize: Double
+  ) {
 
     /** Is `other` a continuation of this or not. Used to merge multi-line section titles */
     def isMatch(other: SectionTitle): Boolean = {
@@ -212,7 +222,7 @@ object SectionTitleExtractor extends Logging {
       val sameFont = other.font.equals(font)
       val sameFontSize = other.fontSize == fontSize
       !other.isPrefixed && close && sameFontSize && sameFont &&
-        (leftAligned || centered || secondWordLeftAligned || secondWordCentered || hyphenated)
+      (leftAligned || centered || secondWordLeftAligned || secondWordCentered || hyphenated)
     }
 
     def addLine(line: Line): SectionTitle =
@@ -229,8 +239,11 @@ object SectionTitleExtractor extends Logging {
       stripSectionTitlesFromSortedParagraphs(pages.map(_.paragraphs), layout).unzip
     (pages, strippedTextPages, sectionHeaders).zipped.map {
       case (page, strippedText, pageSectionHeaders) =>
-        PageWithClassifiedText(page.pageNumber, strippedText.toList,
-          page.classifiedText.copy(sectionTitles = pageSectionHeaders))
+        PageWithClassifiedText(
+          page.pageNumber,
+          strippedText.toList,
+          page.classifiedText.copy(sectionTitles = pageSectionHeaders)
+        )
     }
   }
 
@@ -249,14 +262,25 @@ object SectionTitleExtractor extends Logging {
   private def cleanPrefixedSections(titles: Seq[Seq[SectionTitle]]): Seq[Seq[SectionTitle]] = {
     val numSections = titles.map(_.size).sum
     if (numSections > 3) {
-      val numPrefixedSections = titles.flatten.count(title => isPrefixed(title.lines.head) ||
-        allowNonPrefiex.pattern.matcher(title.toParagraph.text).matches())
+      val numPrefixedSections = titles.flatten.count(
+        title =>
+          isPrefixed(title.lines.head) ||
+            allowNonPrefiex.pattern.matcher(title.toParagraph.text).matches()
+      )
       val percentPrefixed = numPrefixedSections / numSections.toDouble
       if (percentPrefixed > PruneNonPrefixedSections) {
-        logger.debug("Number section titles detected, " +
-          "pruning sections titles that were not numbered")
-        titles.map(pageTitles => pageTitles.filter(title => isPrefixed(title.lines.head) ||
-          allowNonPrefiex.findFirstMatchIn(title.toParagraph.text).isDefined))
+        logger.debug(
+          "Number section titles detected, " +
+            "pruning sections titles that were not numbered"
+        )
+        titles.map(
+          pageTitles =>
+            pageTitles.filter(
+              title =>
+                isPrefixed(title.lines.head) ||
+                  allowNonPrefiex.findFirstMatchIn(title.toParagraph.text).isDefined
+            )
+        )
       } else {
         titles
       }
@@ -289,8 +313,8 @@ object SectionTitleExtractor extends Logging {
         val followingLine = lines.last
 
         if (isTitleStyle(curLine, layout) &&
-          isBeneath(curLineBB, followingLine.boundary) &&
-          !isList(curLine) && !isEquation(curLine)) {
+            isBeneath(curLineBB, followingLine.boundary) &&
+            !isList(curLine) && !isEquation(curLine)) {
           val sectionTitle = SectionTitle.build(curLine)
           val addToTitle = onTitle.isDefined && onTitle.get.isMatch(sectionTitle)
           if (addToTitle) {
@@ -306,15 +330,15 @@ object SectionTitleExtractor extends Logging {
               onTitle = None
             }
             if (isTitleStartText(curLine) &&
-              (prevLineWasTitle || isFarFromPreviousLine(curLine, prevLine, layout)) &&
-              isAlignedOrCentered(curLineBB, layout)) {
+                (prevLineWasTitle || isFarFromPreviousLine(curLine, prevLine, layout)) &&
+                isAlignedOrCentered(curLineBB, layout)) {
               onTitle = Some(sectionTitle)
             }
           }
         } else if (onTitle.isDefined) {
           // Previous line ended a section title
           if (isLineBeginningSection(curLine, onTitle.get, layout) &&
-            isCompleteTitle(onTitle.get)) {
+              isCompleteTitle(onTitle.get)) {
             sectionTitles = (onTitle ++ sectionTitles).toList
           }
           onTitle = None

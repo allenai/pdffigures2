@@ -27,7 +27,8 @@ object ParagraphRebuilder {
     mergeSortedParagraphs(paragraphs.sorted, medianLineSpacing)
 
   private def mergeSortedParagraphs(
-    paragraphs: Seq[Paragraph], medianLineSpacing: Double
+    paragraphs: Seq[Paragraph],
+    medianLineSpacing: Double
   ): List[Paragraph] = {
     if (paragraphs.isEmpty) {
       List()
@@ -53,10 +54,10 @@ object ParagraphRebuilder {
             Math.max(curBB.y1, paragraph.boundary.y1)
           val verticallyAligned = xDist < MinLineContinuationXDist &&
             verticalOverlap / Math.min(paragraph.boundary.height, curBB.height) >
-            MinLineContinuationVerticalOverlap
+              MinLineContinuationVerticalOverlap
 
           continuesReadingOrder && (verticallyAligned ||
-            belowLine && ((!indented && leftAligned) || (prevLineIndented && rightAligned)))
+          belowLine && ((!indented && leftAligned) || (prevLineIndented && rightAligned)))
         }
         if (mergeParagraph) {
           onParagraph = Paragraph(onParagraph.lines ++ paragraph.lines)

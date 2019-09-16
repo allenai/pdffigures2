@@ -64,10 +64,14 @@ class TestExtractionFilters extends UnitSpec {
     assert(figures(0).figType === FigureType.Table)
     assert(figures(0).name === "1")
     assert(figures(0).page === 4)
-    assert(figures(0).caption === "Table 1: Over a set of ten relations, TEXTRUNNER achieved a 33% lower error rate than KNOWITALL, while finding approximately as many correct extractions.")
+    assert(
+      figures(0).caption === "Table 1: Over a set of ten relations, TEXTRUNNER achieved a 33% lower error rate than KNOWITALL, while finding approximately as many correct extractions."
+    )
     assert(figures(1).figType === FigureType.Figure)
     assert(figures(1).name === "1")
     assert(figures(1).page === 4)
-    assert(figures(1).caption === "Figure 1: Overview of the tuples extracted from 9 million Web page corpus. 7.8 million well-formed tuples are found having probability ≥ 0.8. Of those, TEXTRUNNER finds 1 million concrete tuples with arguments grounded in particular real-world entities, 88.1% of which are correct, and 6.8 million tuples reflecting abstract assertions, 79.2% of which are correct.")
+    assert(
+      figures(1).caption === "Figure 1: Overview of the tuples extracted from 9 million Web page corpus. 7.8 million well-formed tuples are found having probability ≥ 0.8. Of those, TEXTRUNNER finds 1 million concrete tuples with arguments grounded in particular real-world entities, 88.1% of which are correct, and 6.8 million tuples reflecting abstract assertions, 79.2% of which are correct."
+    )
   }
 }

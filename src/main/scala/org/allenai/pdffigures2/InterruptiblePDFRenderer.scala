@@ -2,7 +2,7 @@ package org.allenai.pdffigures2
 
 import org.apache.pdfbox.cos.COSBase
 import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.rendering.{ PageDrawer, PageDrawerParameters, PDFRenderer }
+import org.apache.pdfbox.rendering.{ PDFRenderer, PageDrawer, PageDrawerParameters }
 import org.apache.pdfbox.contentstream.operator.Operator
 
 class InterruptiblePDFRenderer(doc: PDDocument) extends PDFRenderer(doc) {

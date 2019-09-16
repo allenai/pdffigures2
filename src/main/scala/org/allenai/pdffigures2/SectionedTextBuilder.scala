@@ -13,6 +13,7 @@ object SectionedTextBuilder {
       PdfText(text, page, paragraph.boundary)
     }
   }
+
   /** Text inside a PDF and its location and page number */
   case class PdfText(text: String, page: Int, region: Box) {
     require(page >= 0, "Page cannot be less than 0")
@@ -20,8 +21,11 @@ object SectionedTextBuilder {
   }
 
   object DocumentSection {
-    def fromParagraphs(header: Option[Paragraph], text: List[Paragraph],
-      pageNumber: Int): DocumentSection = {
+    def fromParagraphs(
+      header: Option[Paragraph],
+      text: List[Paragraph],
+      pageNumber: Int
+    ): DocumentSection = {
       DocumentSection(
         if (header.isDefined) Some(PdfText(header.get, pageNumber)) else None,
         text.map(p => PdfText(p, pageNumber))
@@ -59,21 +63,30 @@ object SectionedTextBuilder {
       if (firstHeaderLineNum > firstParagraphLineNum) {
         val (beforeHeader, afterHeader) =
           paragraphs.span(p => p.lines.head.lineNumber < firstHeaderLineNum)
-        mergeInSections(headers, afterHeader, pageNumber,
-          DocumentSection.fromParagraphs(None, beforeHeader, pageNumber) :: curSections)
+        mergeInSections(
+          headers,
+          afterHeader,
+          pageNumber,
+          DocumentSection.fromParagraphs(None, beforeHeader, pageNumber) :: curSections
+        )
       } else if (headers.tail.isEmpty) {
         DocumentSection.fromParagraphs(headers.headOption, paragraphs, pageNumber) :: curSections
       } else {
         val secondHeaderLineNum = headers.tail.head.startLineNumber
         if (secondHeaderLineNum < firstParagraphLineNum) {
-          mergeInSections(headers.tail, paragraphs, pageNumber,
-            DocumentSection.fromParagraphs(headers.headOption, List(), pageNumber) :: curSections)
+          mergeInSections(
+            headers.tail,
+            paragraphs,
+            pageNumber,
+            DocumentSection.fromParagraphs(headers.headOption, List(), pageNumber) :: curSections
+          )
         } else {
           val (beforeHeader, afterHeader) =
             paragraphs.span(p => p.lines.head.lineNumber < secondHeaderLineNum)
           val sections = DocumentSection.fromParagraphs(
             Some(firstHeader),
-            beforeHeader, pageNumber
+            beforeHeader,
+            pageNumber
           ) :: curSections
           mergeInSections(headers.tail, afterHeader, pageNumber, sections)
         }
@@ -91,16 +104,21 @@ object SectionedTextBuilder {
   def buildSectionedText(pages: List[ClassifiedPage]): Seq[DocumentSection] = {
     val sortedPages = pages.sortBy(_.pageNumber)
     require(
-      sortedPages.sliding(2).forall(pages =>
-        pages.size == 1 || pages.head.pageNumber == pages.last.pageNumber - 1),
+      sortedPages
+        .sliding(2)
+        .forall(pages => pages.size == 1 || pages.head.pageNumber == pages.last.pageNumber - 1),
       "Must have consecutive page numbers"
     )
     require(sortedPages.head.pageNumber == 0, "Must have a first page")
-    val mergedPerPage = sortedPages.map(page =>
-      mergeInSections(
-        page.classifiedText.sectionTitles.toList.sorted,
-        page.paragraphs.toList, page.pageNumber, List()
-      ).reverse)
+    val mergedPerPage = sortedPages.map(
+      page =>
+        mergeInSections(
+          page.classifiedText.sectionTitles.toList.sorted,
+          page.paragraphs.toList,
+          page.pageNumber,
+          List()
+        ).reverse
+    )
     // For sections that cross multiple pages, merge them into one section
     val mergedText = mergedPerPage.foldLeft(List[DocumentSection]()) {
       case (cur, nextPage) =>

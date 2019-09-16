@@ -37,14 +37,10 @@ object FindGraphicsRaster {
     val pixels: Array[Int] = new Array[Int](w * h)
     image.getRaster.getPixels(0, 0, w, h, pixels)
     remove.foreach { box =>
-      for (
-        y <- Math.floor(box.y1 / rescale).toInt to
-          Math.min(Math.ceil(box.y2 / rescale).toInt, h)
-      ) {
-        for (
-          x <- Math.floor(box.x1 / rescale).toInt to
-            Math.min(Math.ceil(box.x2 / rescale).toInt, w)
-        ) {
+      for (y <- Math.floor(box.y1 / rescale).toInt to
+             Math.min(Math.ceil(box.y2 / rescale).toInt, h)) {
+        for (x <- Math.floor(box.x1 / rescale).toInt to
+               Math.min(Math.ceil(box.x2 / rescale).toInt, w)) {
           pixels(w * y + x) = grayScaleTresh
         }
       }
@@ -105,8 +101,7 @@ object FindGraphicsRaster {
             // Set the current pixel to white so we don't visit it again.
             pixels(currentPixel) = pixThreshold
           }
-          boundingBoxes = new Box(minX * rescale, minY * rescale,
-            maxX * rescale, maxY * rescale) :: boundingBoxes
+          boundingBoxes = new Box(minX * rescale, minY * rescale, maxX * rescale, maxY * rescale) :: boundingBoxes
         }
       }
     }

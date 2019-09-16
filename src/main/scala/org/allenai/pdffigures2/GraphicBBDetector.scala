@@ -99,8 +99,8 @@ class GraphicBBDetector(page: PDPage, ignoreWhite: Boolean) extends PDFGraphicsS
   }
 
   private def addLinePath(stroke: Boolean, fill: Boolean): Unit = {
-    val newBound = getGraphicsState.getCurrentClippingPath.
-      getBounds.intersection(linePath.getBounds)
+    val newBound =
+      getGraphicsState.getCurrentClippingPath.getBounds.intersection(linePath.getBounds)
     if (newBound.getWidth > 0 && newBound.getHeight > 0) {
       val skipWhiteGraphic = ignoreWhite &&
         (!stroke || GraphicBBDetector.isWhite(getGraphicsState.getStrokingColor)) &&
@@ -165,9 +165,11 @@ class GraphicBBDetector(page: PDPage, ignoreWhite: Boolean) extends PDFGraphicsS
         at.scale(1.0 / width, -1.0 / height)
         at.translate(0, -height)
       }
-      val imgBounds: Rectangle = at.createTransformedShape(
-        new Rectangle(0, 0, pdImage.getWidth, pdImage.getHeight)
-      ).getBounds
+      val imgBounds: Rectangle = at
+        .createTransformedShape(
+          new Rectangle(0, 0, pdImage.getWidth, pdImage.getHeight)
+        )
+        .getBounds
       val newBound = imgBounds.intersection(clipBounds)
       if (newBound.getWidth > 0 && newBound.getHeight > 0) {
         bounds = newBound :: bounds

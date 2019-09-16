@@ -3,11 +3,11 @@ package org.allenai.pdffigures2
 import org.allenai.common.Config._
 import org.allenai.common.Logging
 import org.allenai.pdffigures2.FigureExtractor.{
-  DocumentWithRasterizedFigures,
+  Document,
   DocumentContent,
-  Document
+  DocumentWithRasterizedFigures
 }
-import org.allenai.pdffigures2.SectionedTextBuilder.{ PdfText, DocumentSection }
+import org.allenai.pdffigures2.SectionedTextBuilder.{ DocumentSection, PdfText }
 
 import com.typesafe.config.ConfigFactory
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -15,40 +15,61 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import java.io.InputStream
 
 case class FigureExtractor(
-    allowOcr: Boolean,
-    ignoreWhiteGraphics: Boolean,
-    detectSectionTitlesFirst: Boolean,
-    rebuildParagraphs: Boolean,
-    cleanRasterizedFigureRegions: Boolean
+  allowOcr: Boolean,
+  ignoreWhiteGraphics: Boolean,
+  detectSectionTitlesFirst: Boolean,
+  rebuildParagraphs: Boolean,
+  cleanRasterizedFigureRegions: Boolean
 ) extends Logging {
-  def getFigures(doc: PDDocument, pages: Option[Seq[Int]] = None,
-    visualLogger: Option[VisualLogger] = None): Iterable[Figure] = {
+  def getFigures(
+    doc: PDDocument,
+    pages: Option[Seq[Int]] = None,
+    visualLogger: Option[VisualLogger] = None
+  ): Iterable[Figure] = {
     parseDocument(doc, pages, visualLogger).figures
   }
 
-  def getRasterizedFigures(doc: PDDocument, dpi: Int, pages: Option[Seq[Int]] = None,
-    visualLogger: Option[VisualLogger] = None): Iterable[RasterizedFigure] = {
+  def getRasterizedFigures(
+    doc: PDDocument,
+    dpi: Int,
+    pages: Option[Seq[Int]] = None,
+    visualLogger: Option[VisualLogger] = None
+  ): Iterable[RasterizedFigure] = {
     val content = parseDocument(doc, pages, visualLogger)
-    content.pagesWithFigures.flatMap(page =>
-      FigureRenderer.rasterizeFigures(doc, page, dpi, cleanRasterizedFigureRegions, visualLogger))
+    content.pagesWithFigures.flatMap(
+      page =>
+        FigureRenderer.rasterizeFigures(doc, page, dpi, cleanRasterizedFigureRegions, visualLogger)
+    )
   }
 
-  def getFiguresWithErrors(doc: PDDocument, pages: Option[Seq[Int]] = None,
-    visualLogger: Option[VisualLogger] = None): FiguresInDocument = {
+  def getFiguresWithErrors(
+    doc: PDDocument,
+    pages: Option[Seq[Int]] = None,
+    visualLogger: Option[VisualLogger] = None
+  ): FiguresInDocument = {
     val content = parseDocument(doc, pages, visualLogger)
     FiguresInDocument(content.figures, content.failedCaptions)
   }
 
-  def getRasterizedFiguresWithErrors(doc: PDDocument, dpi: Int, pages: Option[Seq[Int]] = None,
-    visualLogger: Option[VisualLogger] = None): RasterizedFiguresInDocument = {
+  def getRasterizedFiguresWithErrors(
+    doc: PDDocument,
+    dpi: Int,
+    pages: Option[Seq[Int]] = None,
+    visualLogger: Option[VisualLogger] = None
+  ): RasterizedFiguresInDocument = {
     val content = parseDocument(doc, pages, visualLogger)
-    val rasterizedFigures = content.pagesWithFigures.flatMap(page =>
-      FigureRenderer.rasterizeFigures(doc, page, dpi, cleanRasterizedFigureRegions, visualLogger))
+    val rasterizedFigures = content.pagesWithFigures.flatMap(
+      page =>
+        FigureRenderer.rasterizeFigures(doc, page, dpi, cleanRasterizedFigureRegions, visualLogger)
+    )
     RasterizedFiguresInDocument(rasterizedFigures, content.failedCaptions)
   }
 
-  def getFiguresWithText(doc: PDDocument, pages: Option[Seq[Int]] = None,
-    visualLogger: Option[VisualLogger] = None): Document = {
+  def getFiguresWithText(
+    doc: PDDocument,
+    pages: Option[Seq[Int]] = None,
+    visualLogger: Option[VisualLogger] = None
+  ): Document = {
     val content = parseDocument(doc, pages, visualLogger)
     val abstractText = getAbstract(content)
     val sections = getSections(content)
@@ -58,23 +79,30 @@ case class FigureExtractor(
     Document(content.figures, abstractText, sections)
   }
 
-  def getRasterizedFiguresWithText(doc: PDDocument, dpi: Int, pages: Option[Seq[Int]] = None,
-    visualLogger: Option[VisualLogger] = None): DocumentWithRasterizedFigures = {
+  def getRasterizedFiguresWithText(
+    doc: PDDocument,
+    dpi: Int,
+    pages: Option[Seq[Int]] = None,
+    visualLogger: Option[VisualLogger] = None
+  ): DocumentWithRasterizedFigures = {
     val content = parseDocument(doc, pages, visualLogger)
     val abstractText = getAbstract(content)
     val sections = getSections(content)
     if (visualLogger.isDefined) {
       visualLogger.get.logSections(sections, pages)
     }
-    val rasterizedFigures = content.pagesWithFigures.flatMap(page =>
-      FigureRenderer.rasterizeFigures(doc, page, dpi, cleanRasterizedFigureRegions, visualLogger))
+    val rasterizedFigures = content.pagesWithFigures.flatMap(
+      page =>
+        FigureRenderer.rasterizeFigures(doc, page, dpi, cleanRasterizedFigureRegions, visualLogger)
+    )
     DocumentWithRasterizedFigures(rasterizedFigures, abstractText, sections)
   }
 
   private def getSections(content: DocumentContent): Seq[DocumentSection] = {
     if (content.layout.isEmpty) {
-      content.pagesWithoutFigures.map(p =>
-        DocumentSection(None, p.paragraphs.map(PdfText(_, p.pageNumber))))
+      content.pagesWithoutFigures.map(
+        p => DocumentSection(None, p.paragraphs.map(PdfText(_, p.pageNumber)))
+      )
     } else {
       val documentLayout = content.layout.get
       val text = if (!detectSectionTitlesFirst) {
@@ -90,16 +118,22 @@ case class FigureExtractor(
     val pageWithAbstract = documentContent.pages.find(_.classifiedText.abstractText.nonEmpty)
     pageWithAbstract match {
       case None => None
-      case Some(page) => Some(PdfText(
-        Paragraph(page.classifiedText.abstractText.flatMap(_.lines).toList),
-        page.pageNumber
-      ))
+      case Some(page) =>
+        Some(
+          PdfText(
+            Paragraph(page.classifiedText.abstractText.flatMap(_.lines).toList),
+            page.pageNumber
+          )
+        )
     }
   }
 
   /* Runs the full processing pipeline and returns the figures and intermediate output */
-  private def parseDocument(doc: PDDocument, pages: Option[Seq[Int]],
-    visualLogger: Option[VisualLogger]): DocumentContent = {
+  private def parseDocument(
+    doc: PDDocument,
+    pages: Option[Seq[Int]],
+    visualLogger: Option[VisualLogger]
+  ): DocumentContent = {
     val pagesWithText = TextExtractor.extractText(doc)
     val pagesWithFormattingText = FormattingTextExtractor.extractFormattingText(pagesWithText)
     val documentLayoutOption = DocumentLayout(pagesWithFormattingText)
@@ -130,24 +164,33 @@ case class FigureExtractor(
           logger.debug(s"On page $pageNum")
           val pageText = withSections(pageNum)
           val pageWithGraphics =
-            GraphicsExtractor.extractGraphics(doc, pageText,
-              allowOcr, ignoreWhiteGraphics, visualLogger)
+            GraphicsExtractor.extractGraphics(
+              doc,
+              pageText,
+              allowOcr,
+              ignoreWhiteGraphics,
+              visualLogger
+            )
           if (visualLogger.isDefined) visualLogger.get.logExtractions(pageWithGraphics)
           val pageWithCaptions = CaptionBuilder.buildCaptions(
             pageCandidates,
-            pageWithGraphics, documentLayout.medianLineSpacing
+            pageWithGraphics,
+            documentLayout.medianLineSpacing
           )
           if (visualLogger.isDefined) visualLogger.get.logPagesWithCaption(pageWithCaptions)
           val pageWithRegions = RegionClassifier.classifyRegions(pageWithCaptions, documentLayout)
           if (visualLogger.isDefined) visualLogger.get.logRegions(pageWithRegions)
           val pageWithFigures = FigureDetector.locatedFigures(
-            pageWithRegions, documentLayout, visualLogger
+            pageWithRegions,
+            documentLayout,
+            visualLogger
           )
 
-          if (visualLogger.isDefined) visualLogger.get.logFigures(
-            pageWithFigures.pageNumber,
-            pageWithFigures.figures
-          )
+          if (visualLogger.isDefined)
+            visualLogger.get.logFigures(
+              pageWithFigures.pageNumber,
+              pageWithFigures.figures
+            )
           pageWithFigures
       }.toSeq
       val otherPages =
@@ -158,20 +201,30 @@ case class FigureExtractor(
 }
 
 object FigureExtractor {
+
   /** Fully parsed document, including non-figure information produced by intermediate steps.
     * This is a "physical" page-based representation of a PDF, as opposed to a logical
     * section-based representation of the paper that the Document class implementation
     */
   case class DocumentContent(
-      layout: Option[DocumentLayout],
-      pagesWithFigures: Seq[PageWithFigures], pagesWithoutFigures: Seq[PageWithClassifiedText]
+    layout: Option[DocumentLayout],
+    pagesWithFigures: Seq[PageWithFigures],
+    pagesWithoutFigures: Seq[PageWithClassifiedText]
   ) {
     val pages = (pagesWithFigures ++ pagesWithoutFigures).sortBy(_.pageNumber)
     def figures = pagesWithFigures.flatMap(_.figures)
     def failedCaptions = pagesWithFigures.flatMap(_.failedCaptions)
     require(pages.head.pageNumber == 0, "Must start with page number 0")
-    require(pages.sliding(2).forall(pages => pages.size == 1 ||
-      pages.head.pageNumber + 1 == pages.last.pageNumber), "Pages number must be consecutive")
+    require(
+      pages
+        .sliding(2)
+        .forall(
+          pages =>
+            pages.size == 1 ||
+              pages.head.pageNumber + 1 == pages.last.pageNumber
+        ),
+      "Pages number must be consecutive"
+    )
   }
 
   /** Document with figures extracted and text broken up into sections. A logical, section-based
@@ -196,16 +249,21 @@ object FigureExtractor {
 
   /** Document with figures rasterized */
   case class DocumentWithRasterizedFigures(
-    figures: Seq[RasterizedFigure], abstractText: Option[PdfText], sections: Seq[DocumentSection]
+    figures: Seq[RasterizedFigure],
+    abstractText: Option[PdfText],
+    sections: Seq[DocumentSection]
   )
 
   /** Document with figures saved to disk */
-  case class DocumentWithSavedFigures(figures: Seq[SavedFigure], abstractText: Option[PdfText],
-    sections: Seq[DocumentSection])
+  case class DocumentWithSavedFigures(
+    figures: Seq[SavedFigure],
+    abstractText: Option[PdfText],
+    sections: Seq[DocumentSection]
+  )
 
   /** Thrown if we detect an OCR PDF and `allowOcr` is set to false */
   class OcredPdfException(message: String = null, cause: Throwable = null)
-    extends RuntimeException(message, cause)
+      extends RuntimeException(message, cause)
 
   val conf = ConfigFactory.load()
   val allowOcr = conf[Boolean]("allowOcr")

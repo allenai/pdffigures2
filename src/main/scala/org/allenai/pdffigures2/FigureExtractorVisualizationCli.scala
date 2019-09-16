@@ -10,11 +10,18 @@ import java.io.File
 /** CLI to create visualization of the processing pipeline for a single PDF */
 object FigureExtractorVisualizationCli extends Logging {
 
-  case class CliConfig(input: Option[File] = None, pages: Option[Seq[Int]] = None,
-    displayDpi: Int = 55, showAllSteps: Boolean = false, showRegions: Boolean = false,
-    showExtractions: Boolean = false, showGraphicsClustering: Boolean = false,
-    showCaptions: Boolean = false, showSections: Boolean = false,
-    showCleanedFigureRegions: Boolean = false)
+  case class CliConfig(
+    input: Option[File] = None,
+    pages: Option[Seq[Int]] = None,
+    displayDpi: Int = 55,
+    showAllSteps: Boolean = false,
+    showRegions: Boolean = false,
+    showExtractions: Boolean = false,
+    showGraphicsClustering: Boolean = false,
+    showCaptions: Boolean = false,
+    showSections: Boolean = false,
+    showCleanedFigureRegions: Boolean = false
+  )
 
   val Parser = new scopt.OptionParser[CliConfig]("figure-extractor-visualize") {
     head("figure-extractor-visualize")
@@ -50,7 +57,9 @@ object FigureExtractorVisualizationCli extends Logging {
     opt[Unit]('t', "show-sections") action { (_, c) =>
       c.copy(showSections = true)
     } text "Show the location of sections and paragraphs"
-    opt[Int]('d', "display-dpi") action { (dpi, c) => c.copy(displayDpi = dpi) } validate { dpi =>
+    opt[Int]('d', "display-dpi") action { (dpi, c) =>
+      c.copy(displayDpi = dpi)
+    } validate { dpi =>
       if (dpi > 0) success else failure("DPI must > 0")
     } text "DPI to display figures at (default 55)"
     opt[Seq[Int]]('p', "pages") action { (pages, c) =>
@@ -82,10 +91,14 @@ object FigureExtractorVisualizationCli extends Logging {
     // Logs all the extraction steps to `vLogger`
     if (config.showSections) {
       if (config.showCleanedFigureRegions) {
-        FigureExtractor().getRasterizedFiguresWithText(
-          doc,
-          config.displayDpi, pages, Some(vLogger)
-        ).figures
+        FigureExtractor()
+          .getRasterizedFiguresWithText(
+            doc,
+            config.displayDpi,
+            pages,
+            Some(vLogger)
+          )
+          .figures
       } else {
         FigureExtractor().getFiguresWithText(doc, pages, Some(vLogger)).figures
       }
@@ -93,7 +106,9 @@ object FigureExtractorVisualizationCli extends Logging {
       if (config.showCleanedFigureRegions) {
         FigureExtractor().getRasterizedFigures(
           doc,
-          config.displayDpi, pages, Some(vLogger)
+          config.displayDpi,
+          pages,
+          Some(vLogger)
         )
       } else {
         FigureExtractor().getFigures(doc, pages, Some(vLogger))
