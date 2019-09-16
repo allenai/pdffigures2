@@ -23,8 +23,9 @@ lazy val projectSettings = Seq(
   scmInfo := Some(ScmInfo(
     url("https://github.com/allenai/pdffigures2"),
     "https://github.com/allenai/pdffigures2.git")),
+  bintrayPackage := s"${organization.value}:${name.value}_${scalaBinaryVersion.value}",
+  bintrayOrganization := Some("allenai"),
   bintrayRepository := "maven",
-
   libraryDependencies ++= Seq(
     "org.allenai.common" %% "common-core" % "2.0.0",
     "org.allenai.common" %% "common-testkit" % "2.0.0",
