@@ -55,21 +55,20 @@ works on a single PDF and provides extensive debug visualizations. Note it is re
 
 To run on a PDF and get a preview of the results use:
 
-`sbt "run-main org.allenai.pdffigures2.FigureExtractorVisualizationCli /path/to/pdf"`
+`sbt "runMain org.allenai.pdffigures2.FigureExtractorVisualizationCli /path/to/pdf"`
 
 To get a visualization of how the PDF was parsed:
 
-`sbt "run-main
+`sbt "runMain
 org.allenai.pdffigures2.FigureExtractorVisualizationCli /path/to/pdf" -r`
 
 To get a visualization of all the intermediate steps:
 
-`sbt "run-main
-org.allenai.pdffigures2.FigureExtractorVisualizationCli /path/to/pdf" -s`
+`sbt "runrunMain org.allenai.pdffigures2.FigureExtractorVisualizationCli /path/to/pdf" -s`
 
 To run on lots of PDFs while saving the images, figure objects, and run statistics:
 
-`sbt "run-main
+`sbt "runMain
 org.allenai.pdffigures2.FigureExtractorBatchCli /path/to/pdf_directory/
 -s stat_file.json -m /figure/image/output/prefix -d /figure/data/output/prefix"`
 
