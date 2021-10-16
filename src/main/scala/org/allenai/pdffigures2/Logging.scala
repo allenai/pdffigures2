@@ -1,5 +1,7 @@
 package org.allenai.pdffigures2
 
+// Copied org.allenai.common.Logging (https://github.com/allenai/common)
+
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.html.HTMLLayout
