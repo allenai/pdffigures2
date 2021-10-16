@@ -3,7 +3,6 @@ package org.allenai.pdffigures2
 import org.apache.pdfbox.text.TextPosition
 
 import java.text.Normalizer
-import org.allenai.common.StringUtils._
 
 /** Span of text denoted by the starting and ending line number, inclusive */
 case class TextSpan(start: Int, end: Int) extends Ordered[TextSpan] {
@@ -13,6 +12,8 @@ case class TextSpan(start: Int, end: Int) extends Ordered[TextSpan] {
 }
 
 object Paragraph {
+  val unprintableRegex = """[\p{Cc}\p{Cf}\p{Co}\p{Cn}]""".r
+
   def apply(lines: List[Line]): Paragraph = Paragraph(lines, Box.container(lines.map(_.boundary)))
 
   /** Copied from private method in PDBox's PDFTextStripper, normalizes unicode characters */
@@ -39,7 +40,7 @@ object Paragraph {
       q += 1; q - 1
     }
     if (builder == null) {
-      word.removeUnprintable
+      unprintableRegex.replaceAllIn(word, "")
     } else {
       builder.append(word.substring(p, q))
       builder.toString()

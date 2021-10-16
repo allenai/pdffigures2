@@ -1,8 +1,7 @@
 package org.allenai.pdffigures2
 
-import org.allenai.common.Logging
-
 import org.apache.pdfbox.pdmodel.font.PDFont
+import FigureType._
 
 case class CaptionStart(
   header: String,
