@@ -1,7 +1,5 @@
 package org.allenai.pdffigures2
 
-import org.allenai.common.Config._
-import org.allenai.common.Logging
 import org.allenai.pdffigures2.FigureExtractor.{
   Document,
   DocumentContent,
@@ -265,12 +263,29 @@ object FigureExtractor {
   class OcredPdfException(message: String = null, cause: Throwable = null)
       extends RuntimeException(message, cause)
 
-  val conf = ConfigFactory.load()
-  val allowOcr = conf[Boolean]("allowOcr")
-  val detectSectionTitlesFirst = conf[Boolean]("detectSectionTitlesFirst")
-  val rebuildParagraphs = conf[Boolean]("rebuildParagraphs")
-  val ignoreWhiteGraphics = conf[Boolean]("ignoreWhiteGraphics")
-  val cleanRasterizedFigureRegions = conf[Boolean]("cleanRasterizedFigureRegions")
+  // Whether to parse papers that appear to be OCRed, this can be slow and be warned: we tend to get
+  // worse results on these PDFs
+  val allowOcr = false
+
+  // Run the section titles before detecting the figures, recommended to keep this
+  // off since extracting figures can remove misleading pieces of text (like figure titles)
+  // the section title algorithm might fail on.
+  val detectSectionTitlesFirst = false
+
+  // Attempt to rebuild the paragraph returned from PDFBox, which can improve the
+  // paragraphing grouped returned in some cases
+  val rebuildParagraphs = true
+
+  // Skip colorless or 'empty' graphic when extracting graphic regions, this improves
+  // accuracy. However, if the extracted figures are not being rendered to disk (so only
+  // the metedata is being extracted), turning this off can increase processing speed
+  // non-trivially since the processor can skip reading color related data from ther PDF.
+  val ignoreWhiteGraphics = true
+
+  // Perform some post-processing cleanup on the extracted figures after rendering them,
+  // this can help alleviate minor issue with text in the extracted figure being clipped
+  // at the borders of the figure.
+  val cleanRasterizedFigureRegions = true
 
   def apply(): FigureExtractor = {
     new FigureExtractor(

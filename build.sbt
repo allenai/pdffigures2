@@ -11,10 +11,6 @@ ThisBuild / version      := "0.1.0"
 lazy val projectSettings = Seq(
   name := "pdffigures2",
   crossScalaVersions := supportedScalaVersions,
-  resolvers ++= Seq(
-    Resolver.bintrayRepo("allenai", "maven"),
-    Resolver.jcenterRepo
-  ),
   publishMavenStyle := true,
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
@@ -27,8 +23,6 @@ lazy val projectSettings = Seq(
   bintrayOrganization := Some("allenai"),
   bintrayRepository := "maven",
   libraryDependencies ++= Seq(
-    "org.allenai.common" %% "common-core" % "2.0.0",
-    "org.allenai.common" %% "common-testkit" % "2.0.0",
     "io.spray" %% "spray-json" % "1.3.5",
     "com.github.scopt" %% "scopt" % "3.7.1",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
