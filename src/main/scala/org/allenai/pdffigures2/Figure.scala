@@ -1,14 +1,13 @@
 package org.allenai.pdffigures2
 
 import java.awt.image.BufferedImage
-import org.allenai.common.{ Enum, EnumCompanion }
 
-sealed abstract class FigureType(id: String) extends Enum[FigureType]
-object FigureType extends EnumCompanion[FigureType] {
-  case object Table extends FigureType("Table")
-  case object Figure extends FigureType("Figure")
-  register(Figure, Table)
+
+object FigureType extends Enumeration {
+  type FigureType = Value
+  val Table, Figure = Value
 }
+import FigureType._
 
 case class CaptionParagraph(name: String, figType: FigureType, page: Int, paragraph: Paragraph) {
   def boundary: Box = paragraph.boundary

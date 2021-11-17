@@ -1,7 +1,5 @@
 package org.allenai.pdffigures2
 
-import org.allenai.common.Logging
-
 object FormattingTextExtractor extends Logging {
 
   // Matches "Abstract. This Paper...", "Abstract", "Abstract-In this paper"

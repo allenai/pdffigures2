@@ -4,7 +4,6 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 import ch.qos.logback.classic.{ Level, Logger }
-import org.allenai.common.Logging
 import org.allenai.pdffigures2.FigureExtractor.DocumentWithSavedFigures
 import org.allenai.pdffigures2.JsonProtocol._
 import org.apache.pdfbox.pdmodel.PDDocument

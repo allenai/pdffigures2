@@ -1,6 +1,5 @@
 package org.allenai.pdffigures2
 
-import org.allenai.common.Logging
 
 object RegionClassifier extends Logging {
 
