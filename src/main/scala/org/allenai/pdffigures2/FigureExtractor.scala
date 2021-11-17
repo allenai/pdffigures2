@@ -127,7 +127,7 @@ case class FigureExtractor(
   }
 
   /* Runs the full processing pipeline and returns the figures and intermediate output */
-  private def parseDocument(
+  def parseDocument(
     doc: PDDocument,
     pages: Option[Seq[Int]],
     visualLogger: Option[VisualLogger]
