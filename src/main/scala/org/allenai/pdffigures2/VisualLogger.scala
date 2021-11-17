@@ -169,9 +169,10 @@ class VisualLogger(
 
       val panel = new JPanel(new BorderLayout())
       panel.add(visualization, BorderLayout.CENTER)
-      val frame = new JFrame()
-      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
-      frame.add(panel)
+      val frame = new JFrame() {
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
+        add(panel)
+      }
 
       // So our frame can be closed by hot key, on OSX this means at least Cmd-W works
       val closeKey = KeyStroke.getKeyStroke(
