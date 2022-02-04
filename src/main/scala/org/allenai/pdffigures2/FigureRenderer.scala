@@ -152,7 +152,7 @@ object FigureRenderer {
 
   /** Save figures to disk in a vector graphic format by shelling out to pdftocairo */
   def saveFiguresAsImagesCairo(
-    doc: PDDocument,
+    inputFile: File,
     figuresAndFilenames: Seq[(String, Figure)],
     format: String,
     dpi: Int
@@ -161,8 +161,6 @@ object FigureRenderer {
     val groupedByPage = figuresAndFilenames.groupBy(_._2.page)
     groupedByPage.flatMap {
       case (pageNum, pageFigures) =>
-        val pageDoc = new PDDocument() // Save some IO by just sending cairo the relevant page
-        pageDoc.addPage(doc.getPage(pageNum))
         val savedFigures = pageFigures.map {
           case (filename, fig) =>
             if (Thread.interrupted()) throw new InterruptedException()
@@ -171,17 +169,17 @@ object FigureRenderer {
             val y = Math.round(box.y1) - PadUnexpandedImage
             val w = Math.round(box.width) + PadUnexpandedImage * 2
             val h = Math.round(box.height) + PadUnexpandedImage * 2
+            val pdffn = inputFile.getAbsolutePath
+            val pdfpg = pageNum + 1
             val cmdStr = s"pdftocairo -$format -r $dpi " +
-              s"-x $x -y $y -H $h -W $w -paperw $w -paperh $h - $filename"
+              s"-x $x -y $y -H $h -W $w -l $pdfpg -f $pdfpg $pdffn $filename"
             val cmd = Runtime.getRuntime.exec(cmdStr)
             val outStream = cmd.getOutputStream
-            pageDoc.save(outStream) // Stream the doc to cairo
             if (cmd.waitFor() != 0) {
               throw new IOException("Error using cairo to save a figure")
             }
             SavedFigure(fig, filename, dpi)
         }
-        pageDoc.close()
         savedFigures
     }
   }
