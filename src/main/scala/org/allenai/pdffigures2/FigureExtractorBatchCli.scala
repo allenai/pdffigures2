@@ -190,7 +190,7 @@ object FigureExtractorBatchCli extends Logging {
             )
             val savedFigures = FigureRenderer
               .saveFiguresAsImagesCairo(
-                doc,
+                inputFile,
                 filenames.zip(document.figures),
                 config.figureFormat,
                 config.dpi
@@ -228,7 +228,7 @@ object FigureExtractorBatchCli extends Logging {
             )
             val savedFigures = FigureRenderer
               .saveFiguresAsImagesCairo(
-                doc,
+                inputFile,
                 filenames.zip(figuresWithErrors.figures),
                 config.figureFormat,
                 config.dpi
