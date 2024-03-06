@@ -265,7 +265,7 @@ object FigureExtractor {
 
   // Whether to parse papers that appear to be OCRed, this can be slow and be warned: we tend to get
   // worse results on these PDFs
-  val allowOcr = false
+  val allowOcr = true
 
   // Run the section titles before detecting the figures, recommended to keep this
   // off since extracting figures can remove misleading pieces of text (like figure titles)
